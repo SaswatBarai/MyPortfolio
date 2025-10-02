@@ -162,7 +162,7 @@ const Index = () => {
                 </p>
                 <p className="text-sm text-foreground mb-6 leading-relaxed">
                   Hey there 👋 I&apos;m{" "}
-                  <span className="font-semibold">Subodh Kumar Pradhan</span> —
+                  <span className="font-semibold">Saswat Barai</span> —
                   a curious builder and CSE undergrad exploring how technology
                   can transform ideas into real-world products. I enjoy working
                   across{" "}
