@@ -128,18 +128,10 @@ const experiences = [
 // ];
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("projects");
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
 
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.tags.some((tag) =>
-        tag.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-  );
+  const filteredProjects = projects;
 
   return (
     <div

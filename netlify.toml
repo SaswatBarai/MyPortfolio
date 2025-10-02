@@ -1,16 +1,6 @@
 [build]
-  publish = ".next"
+  publish = "out"
   command = "pnpm run build"
-
-[build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-[dev]
-  command = "pnpm run dev"
-  port = 3000
 
 [[redirects]]
   from = "/*"
