@@ -24,8 +24,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           );
           if (!valid) return null;
         } else {
-          // Fallback: plain text password comparison (dev only)
-          if (credentials.password !== process.env.OWNER_PASSWORD) return null;
+          // No password hash configured — refuse authentication
+          console.warn("[auth] OWNER_PASSWORD_HASH is not set. Authentication disabled.");
+          return null;
         }
 
         return {

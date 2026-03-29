@@ -26,6 +26,7 @@ export default function BookPage() {
   const [step, setStep] = useState<Step>("date");
   const [availability, setAvailability] = useState<AvailabilityData | null>(null);
   const [loadingAvail, setLoadingAvail] = useState(true);
+  const [availError, setAvailError] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [form, setForm] = useState<FormData>({
@@ -45,8 +46,9 @@ export default function BookPage() {
       const res = await fetch(url);
       const data = await res.json();
       setAvailability(data);
+      setAvailError("");
     } catch {
-      // ignore
+      setAvailError("Failed to load availability. Please refresh and try again.");
     } finally {
       setLoadingAvail(false);
     }
@@ -124,6 +126,8 @@ export default function BookPage() {
             <h1 className="text-2xl font-bold">Select a Date</h1>
             {loadingAvail ? (
               <p className="text-muted-foreground">Loading availability…</p>
+            ) : availError ? (
+              <p className="text-sm text-red-500">{availError}</p>
             ) : (
               <>
                 <DayPicker

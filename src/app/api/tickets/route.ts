@@ -17,8 +17,11 @@ export async function GET(req: NextRequest) {
   const statusFilter = searchParams.get("status");
   const dateFilter = searchParams.get("date");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const query: Record<string, any> = {};
+  type TicketQuery = {
+    status?: string;
+    preferredDate?: { $gte: Date; $lt: Date };
+  };
+  const query: TicketQuery = {};
   if (statusFilter) query.status = statusFilter;
   if (dateFilter) {
     const d = new Date(dateFilter);

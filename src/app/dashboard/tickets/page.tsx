@@ -50,9 +50,18 @@ export default function TicketsPage() {
   async function handleCancel(id: string) {
     if (!confirm("Cancel this ticket?")) return;
     setCancelling(id);
-    await fetch(`/api/tickets/${id}/cancel`, { method: "PATCH" });
-    await fetchTickets();
-    setCancelling(null);
+    try {
+      const res = await fetch(`/api/tickets/${id}/cancel`, { method: "PATCH" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to cancel");
+      }
+      await fetchTickets();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to cancel ticket");
+    } finally {
+      setCancelling(null);
+    }
   }
 
   return (

@@ -75,9 +75,18 @@ export default function AvailabilityPage() {
   async function handleDelete(id: string) {
     if (!confirm("Delete this blocked slot?")) return;
     setDeleting(id);
-    await fetch(`/api/blocked-slots/${id}`, { method: "DELETE" });
-    await fetchSlots();
-    setDeleting(null);
+    try {
+      const res = await fetch(`/api/blocked-slots/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to delete");
+      }
+      await fetchSlots();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete slot");
+    } finally {
+      setDeleting(null);
+    }
   }
 
   return (
