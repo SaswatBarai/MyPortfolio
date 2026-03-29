@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 import { Tabs } from "@/components/ui/tabs";
 import { ProjectCard } from "@/components/ProjectCard";
@@ -173,8 +174,8 @@ const Index = () => {
                 </p>
 
                 <div className="flex gap-2 mb-8">
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    Schedule a call
+                  <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Link href="/schedule">Schedule a call</Link>
                   </Button>
                   <Button variant="outline">Resume</Button>
                   <Button variant="outline" size="icon"
