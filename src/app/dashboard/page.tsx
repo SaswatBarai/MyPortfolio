@@ -29,6 +29,10 @@ interface Slot {
   booked: boolean;
 }
 
+type DayConfig = { free: boolean; startTime: string; endTime: string };
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 const statusMeta = {
   pending:  { label: "pending",  Icon: Clock,        cls: "text-muted-foreground border-border" },
   approved: { label: "approved", Icon: CheckCircle2, cls: "text-green-400 border-green-500/30" },
@@ -36,6 +40,16 @@ const statusMeta = {
 };
 
 type TabKey = "pending" | "approved" | "rejected" | "slots";
+
+const defaultWeeklyConfig = (): DayConfig[] => [
+  { free: false, startTime: "09:00", endTime: "17:00" }, // Sun — no free
+  { free: true,  startTime: "09:00", endTime: "17:00" }, // Mon — free
+  { free: true,  startTime: "09:00", endTime: "17:00" }, // Tue — free
+  { free: true,  startTime: "09:00", endTime: "17:00" }, // Wed — free
+  { free: true,  startTime: "09:00", endTime: "17:00" }, // Thu — free
+  { free: true,  startTime: "09:00", endTime: "17:00" }, // Fri — free
+  { free: false, startTime: "09:00", endTime: "17:00" }, // Sat — no free
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -53,6 +67,11 @@ export default function DashboardPage() {
   const [requestError, setRequestError] = useState("");
   const [notice, setNotice] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+
+  const [slotMode, setSlotMode] = useState<"manual" | "prebuild">("manual");
+  const [weeksAhead, setWeeksAhead] = useState(2);
+  const [generating, setGenerating] = useState(false);
+  const [weeklyConfig, setWeeklyConfig] = useState<DayConfig[]>(defaultWeeklyConfig);
 
   const fetchRequests = useCallback(async () => {
     setLoadingRequests(true);
@@ -129,6 +148,46 @@ export default function DashboardPage() {
     } finally { setAddingSlot(false); }
   }
 
+  async function handleGeneratePrebuild() {
+    setSlotError("");
+    setGenerating(true);
+    let totalCreated = 0;
+    let totalSkipped = 0;
+    try {
+      const today = new Date();
+      const startDate = today.toISOString().slice(0, 10);
+      const end = new Date(today);
+      end.setDate(end.getDate() + weeksAhead * 7);
+      const endDate = end.toISOString().slice(0, 10);
+
+      for (let day = 0; day < 7; day++) {
+        const cfg = weeklyConfig[day];
+        if (!cfg.free) continue;
+        const res = await fetch("/api/schedule/slots", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "weekly",
+            startDate,
+            endDate,
+            weekdays: [day],
+            startTime: cfg.startTime,
+            endTime: cfg.endTime,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setSlotError(data.error ?? "Failed to generate slots"); return; }
+        totalCreated += data.createdCount ?? 0;
+        totalSkipped += data.skippedCount ?? 0;
+      }
+
+      await fetchSlots();
+      setNotice(`→ Generated ${totalCreated} slots (${totalSkipped} duplicates skipped).`);
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function handleDeleteSlot(id: string) {
     if (!confirm("Delete this slot?")) return;
     await fetch(`/api/schedule/slots?id=${id}`, { method: "DELETE" });
@@ -147,6 +206,18 @@ export default function DashboardPage() {
     router.push("/dashboard/login");
   }
 
+  function toggleDay(dayIdx: number) {
+    setWeeklyConfig((prev) =>
+      prev.map((d, i) => i === dayIdx ? { ...d, free: !d.free } : d)
+    );
+  }
+
+  function updateDayTime(dayIdx: number, field: "startTime" | "endTime", value: string) {
+    setWeeklyConfig((prev) =>
+      prev.map((d, i) => i === dayIdx ? { ...d, [field]: value } : d)
+    );
+  }
+
   const pending  = requests.filter((r) => r.status === "pending");
   const approved = requests.filter((r) => r.status === "approved");
   const rejected = requests.filter((r) => r.status === "rejected");
@@ -159,7 +230,6 @@ export default function DashboardPage() {
     const { label, Icon, cls } = statusMeta[req.status];
     return (
       <div className="border-2 border-border bg-card hover:border-foreground/30 transition-colors">
-        {/* Card header */}
         <div className="flex items-center justify-between px-4 py-2 border-b-2 border-border bg-muted">
           <div className="flex items-center gap-2">
             <User className="h-3 w-3 text-muted-foreground" />
@@ -360,58 +430,172 @@ export default function DashboardPage() {
         {/* Slots */}
         {activeTab === "slots" && (
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Add slot form */}
+
+            {/* Add slot panel */}
             <div className="border-2 border-border">
-              <div className="border-b-2 border-border bg-muted px-4 py-2">
+              {/* Panel header with mode toggle */}
+              <div className="border-b-2 border-border bg-muted px-4 py-2 flex items-center justify-between">
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">add_slot.sh</span>
+                <div className="flex border border-border overflow-hidden">
+                  <button
+                    onClick={() => setSlotMode("manual")}
+                    className={`px-2.5 py-1 font-mono text-[9px] uppercase tracking-widest transition-colors ${
+                      slotMode === "manual" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    manual
+                  </button>
+                  <button
+                    onClick={() => setSlotMode("prebuild")}
+                    className={`px-2.5 py-1 font-mono text-[9px] uppercase tracking-widest border-l border-border transition-colors ${
+                      slotMode === "prebuild" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    prebuild
+                  </button>
+                </div>
               </div>
-              <form onSubmit={handleAddSlot} className="p-4 flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">date</label>
-                  <input
-                    type="date"
-                    value={newSlot.date}
-                    onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
-                    min={new Date().toISOString().slice(0, 10)}
-                    required
-                    className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-foreground transition-colors"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+
+              {/* Manual mode */}
+              {slotMode === "manual" && (
+                <form onSubmit={handleAddSlot} className="p-4 flex flex-col gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">start</label>
+                    <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">date</label>
                     <input
-                      type="time"
-                      value={newSlot.startTime}
-                      onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
+                      type="date"
+                      value={newSlot.date}
+                      onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
+                      min={new Date().toISOString().slice(0, 10)}
                       required
                       className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-foreground transition-colors"
                     />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">end</label>
-                    <input
-                      type="time"
-                      value={newSlot.endTime}
-                      onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                      required
-                      className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-foreground transition-colors"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">start</label>
+                      <input
+                        type="time"
+                        value={newSlot.startTime}
+                        onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
+                        required
+                        className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-foreground transition-colors"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">end</label>
+                      <input
+                        type="time"
+                        value={newSlot.endTime}
+                        onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
+                        required
+                        className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-foreground transition-colors"
+                      />
+                    </div>
                   </div>
+                  {slotError && <p className="font-mono text-xs text-destructive">{slotError}</p>}
+                  <button
+                    type="submit"
+                    disabled={addingSlot}
+                    className="w-full py-2.5 bg-foreground text-background font-mono text-xs uppercase tracking-widest hover:bg-foreground/90 border-2 border-foreground transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {addingSlot ? <Loader2 className="animate-spin h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                    add slot
+                  </button>
+                </form>
+              )}
+
+              {/* Prebuild mode */}
+              {slotMode === "prebuild" && (
+                <div className="p-4 flex flex-col gap-4">
+                  {/* Weeks ahead selector */}
+                  <div className="flex flex-col gap-1">
+                    <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">generate for next</label>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {[1, 2, 3, 4, 6, 8].map((w) => (
+                        <button
+                          key={w}
+                          type="button"
+                          onClick={() => setWeeksAhead(w)}
+                          className={`px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest border transition-colors ${
+                            weeksAhead === w
+                              ? "bg-foreground text-background border-foreground"
+                              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {w}w
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Day rows */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">weekly availability</label>
+                    {DAY_LABELS.map((label, dayIdx) => {
+                      const cfg = weeklyConfig[dayIdx];
+                      return (
+                        <div
+                          key={dayIdx}
+                          className={`flex items-center gap-2 px-3 py-2 border transition-colors ${
+                            cfg.free ? "border-accent/40 bg-accent/5" : "border-border"
+                          }`}
+                        >
+                          {/* Day toggle button */}
+                          <button
+                            type="button"
+                            onClick={() => toggleDay(dayIdx)}
+                            className={`shrink-0 w-10 py-1 font-mono text-[9px] uppercase tracking-widest border transition-colors ${
+                              cfg.free
+                                ? "bg-accent text-accent-foreground border-accent"
+                                : "border-border text-muted-foreground hover:border-foreground/40"
+                            }`}
+                          >
+                            {label}
+                          </button>
+
+                          {/* Status label */}
+                          <span className={`font-mono text-[9px] uppercase tracking-widest w-12 shrink-0 ${cfg.free ? "text-accent" : "text-muted-foreground/50"}`}>
+                            {cfg.free ? "free" : "no free"}
+                          </span>
+
+                          {/* Time inputs — only when free */}
+                          {cfg.free ? (
+                            <div className="flex items-center gap-1 ml-auto">
+                              <input
+                                type="time"
+                                value={cfg.startTime}
+                                onChange={(e) => updateDayTime(dayIdx, "startTime", e.target.value)}
+                                className="bg-background border border-border px-1.5 py-1 font-mono text-[10px] text-foreground w-[5.5rem] focus:outline-none focus:border-foreground transition-colors"
+                              />
+                              <span className="font-mono text-[10px] text-muted-foreground">→</span>
+                              <input
+                                type="time"
+                                value={cfg.endTime}
+                                onChange={(e) => updateDayTime(dayIdx, "endTime", e.target.value)}
+                                className="bg-background border border-border px-1.5 py-1 font-mono text-[10px] text-foreground w-[5.5rem] focus:outline-none focus:border-foreground transition-colors"
+                              />
+                            </div>
+                          ) : (
+                            <span className="font-mono text-[9px] text-muted-foreground/30 ml-auto">—</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {slotError && <p className="font-mono text-xs text-destructive">{slotError}</p>}
+
+                  <button
+                    type="button"
+                    onClick={handleGeneratePrebuild}
+                    disabled={generating || weeklyConfig.every((d) => !d.free)}
+                    className="w-full py-2.5 bg-foreground text-background font-mono text-xs uppercase tracking-widest hover:bg-foreground/90 border-2 border-foreground transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {generating ? <Loader2 className="animate-spin h-3.5 w-3.5" /> : <Calendar className="h-3.5 w-3.5" />}
+                    generate {weeksAhead} week{weeksAhead > 1 ? "s" : ""} of slots
+                  </button>
                 </div>
-                {slotError && <p className="font-mono text-xs text-destructive">{slotError}</p>}
-                <button
-                  type="submit"
-                  disabled={addingSlot}
-                  className="w-full py-2.5 bg-foreground text-background font-mono text-xs uppercase tracking-widest hover:bg-foreground/90 border-2 border-foreground transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {addingSlot
-                    ? <Loader2 className="animate-spin h-3.5 w-3.5" />
-                    : <Plus className="h-3.5 w-3.5" />
-                  }
-                  add slot
-                </button>
-              </form>
+              )}
             </div>
 
             {/* Slot list */}
@@ -420,7 +604,7 @@ export default function DashboardPage() {
                 <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">upcoming slots</span>
                 <span className="font-mono text-[10px] text-accent">{slots.length} total</span>
               </div>
-              <div className="max-h-80 overflow-y-auto">
+              <div className="max-h-[32rem] overflow-y-auto">
                 {loadingSlots ? (
                   <div className="flex items-center gap-2 py-8 justify-center font-mono text-xs text-muted-foreground">
                     <Loader2 className="animate-spin h-3.5 w-3.5" />loading…
@@ -453,6 +637,7 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
+
           </div>
         )}
       </main>
