@@ -34,8 +34,8 @@ React.useEffect(() => {
   const navItems = [
     { label: "Projects", value: "projects" },
     { label: "Experience", value: "experience" },
-    { label: "Blogs", value: "Blogs" },
-    { label: "Contact", value: "Contact" },
+    { label: "Achievements", value: "achievements" },
+    { label: "Contact", value: "hire-me" },
   ]
 
   return (

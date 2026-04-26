@@ -19,91 +19,47 @@ import Preloader from "@/components/Preloader";
 
 const projects = [
   {
-    title: "Skiper UI",
-    date: "January 20, 2025",
+    title: "LMS Microservices Platform",
+    date: "Oct 2025 - Present",
     description:
-      "Skiper UI is a modern UI library for Next.js components that provides sleek, ready-to-use components. With over 25,000 user views in the last 30 days, it offers easy copy-paste implementation and is built on shadcn.",
-    tags: ["Next.js", "UI Library", "React.js", "tailwind", "shadcn"],
+      "Architected a scalable LMS using Node.js and TypeScript microservices, securing 10+ API endpoints via Kong API Gateway and HashiCorp Vault to support 1,000+ concurrent users.",
+    tags: ["Node.js", "TypeScript", "Kafka", "Redis", "Kong", "Vault"],
     image: project1,
     links: {
-      website: "#",
-      twitter: "#",
-      youtube: "#",
-      linkedin: "#",
-    },
-  },
-  {
-    title: "100x wallet",
-    date: "November 20, 2024",
-    description:
-      "100x Wallet is a Web3 wallet generator that creates wallets based on mnemonic phrases. It allows users to generate new wallets or import existing ones, without storing private keys. The wallets are password-protected, ensuring secure access without compromising private key storage.",
-    tags: ["Solana", "Sol Wallet", "React.js", "tailwind"],
-    image: project2,
-    links: {
       github: "#",
-      website: "#",
-      twitter: "#",
-      youtube: "#",
-      linkedin: "#",
     },
   },
   {
-    title: "Fix My Code",
-    date: "August 20, 2024",
+    title: "Hiky (Real-time Messaging Platform)",
+    date: "May 2024 - Sept 2024",
     description:
-      "Fix My Code is an innovative platform designed to help developers debug, optimize, and enhance their code with ease. Dive into the features below to see how it can transform your coding experience",
-    tags: ["Next.js", "Clerk", "OpenAI", "tailwind css", "SSR"],
+      "Built a real-time messaging platform with React.js and Node.js, achieving sub-100ms latency using WebSockets and Redis Pub/Sub for scalable cross-instance communication.",
+    tags: ["React.js", "Node.js", "WebSockets", "Redis", "JWT/PASETO"],
     image: project3,
     links: {
       github: "#",
-      website: "#",
-      twitter: "#",
-      youtube: "#",
-      linkedin: "#",
-    },
-  },
-  {
-    title: "My UI/UX Portfolio",
-    date: "May 20, 2024",
-    description:
-      "A collection of my UI/UX projects showcasing my skills in design and development",
-    tags: ["Next.js", "Framer Motion", "tailwind css", "shadcn/ui"],
-    image: project4,
-    links: {
-      github: "#",
-      website: "#",
-      twitter: "#",
-      youtube: "#",
-      linkedin: "#",
     },
   },
 ];
 
 const experiences = [
   {
-    company: "Self-employed",
-    role: "Freelance Developer",
-    duration: "December 2024 - Present",
-    type: ["Freelance", "Remote"],
+    company: "CNX10 ITER (Technical Club)",
+    role: "Backend Engineer",
+    duration: "Jan 2024 - Present",
+    type: ["Leadership", "On-site"],
     description: [
-      "Developed custom web applications and e-commerce solutions for multiple clients",
-      "Built responsive websites using React, Next.js and modern frontend technologies",
-      "Provided technical consulting and solutions architecture for small businesses",
+      "Architect and deploy server-side logic using Node.js and Express, supporting community-led technical projects for 500+ active members.",
+      "Optimize database performance in MongoDB by implementing efficient indexing and schema normalization.",
+      "Reduced API response times by 20% across internal management tools.",
     ],
-    tech: "React, Next.js, TypeScript, Node.js, MongoDB, Tailwind, Framer Motion, AWS",
+    tech: "Node.js, Express, MongoDB, API Design, Indexing, Schema Design",
   },
-  {
-    company: "RMSI (Client - Apple Inc)",
-    role: "Software Engineer",
-    duration: "October 2023 - December 2024",
-    type: ["Full time", "Remote"],
-    description: [
-      "Engineered API for Apple Maps data translation & validation using Node.js/Express/MySQL",
-      "Built data visualization tool with React/AWS for digitization analysis",
-      "Led NextJS POC initiatives demonstrating scalable solutions",
-    ],
-    tech: "NodeJS, Express, MySQL, NextJS, TypeScript, React, Tailwind, AWS",
-  },
+];
+
+const achievements = [
+  "Runner-up in the college-level finals of Smart India Hackathon for building software solutions to real-world problem statements.",
+  "Mentored 45+ students in backend and frontend development through technical workshops, code reviews, and debugging sessions.",
 ];
 
 // const blogs = [
@@ -156,20 +112,16 @@ const Index = () => {
             {/* Sidebar */}
             <aside className="space-y-8 md:sticky md:top-[73px] md:self-start md:max-h-[calc(100vh-73px)] md:overflow-y-auto">
               <div>
-                <h1 className="text-4xl font-bold mb-2">Saswat</h1>
+                <h1 className="text-4xl font-bold mb-2">Saswat Barai</h1>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Bringing Ideas to Life ✨
+                  Backend Engineer and CSE Undergrad
                 </p>
                 <p className="text-sm text-foreground mb-6 leading-relaxed">
-                  Hey there 👋 I&apos;m{" "}
-                  <span className="font-semibold">Saswat Barai</span> —
-                  a curious builder and CSE undergrad exploring how technology
-                  can transform ideas into real-world products. I enjoy working
-                  across{" "}
-                  <span className="font-semibold">
-                    web apps, backend systems, and applied AI
-                  </span>
-                  .
+                  I&apos;m a Computer Science undergraduate at{" "}
+                  <span className="font-semibold">Siksha &apos;O&apos; Anusandhan (ITER)</span>{" "}
+                  focused on building scalable backend systems and production-grade web applications.
+                  I work across microservices, distributed systems, and real-time platforms using modern
+                  JavaScript and TypeScript ecosystems.
                 </p>
 
                 <div className="flex gap-2 mb-8">
@@ -199,13 +151,13 @@ const Index = () => {
 
                 <div className="space-y-3 text-sm">
                   <TechStack
-                    category="Frontend"
-                    technologies="React, Next.js, TailwindCSS, ShadCN UI, Framer Motion"
+                    category="Languages"
+                    technologies="JavaScript, TypeScript, Java, Python, PostgreSQL, C, HTML5/CSS3"
                   />
-                  <TechStack category="Backend" technologies="Node.js, Express.js, Socket.io " />
-                  <TechStack category="Database" technologies="MongoDB, Postgres, Redis" />
-                  <TechStack category="Cloud & Tools" technologies="Vercel, Firebase, Git, Docker" />
-                  <TechStack category="Learning" technologies="AI/ML, Devops, System Design" />
+                  <TechStack category="Frameworks" technologies="Next.js, React.js, Node.js, Express, Redux, Tailwind CSS" />
+                  <TechStack category="Data & ML" technologies="NumPy, Pandas, Scikit-learn, Machine Learning" />
+                  <TechStack category="DevOps & Infra" technologies="Docker, Kafka, Kong API Gateway, HashiCorp Vault, Redis" />
+                  <TechStack category="Observability & Cloud" technologies="Prometheus, Grafana, ELK Stack, AWS (EC2/S3), Firebase, Git/GitHub, Postman" />
                 </div>
               </div>
             </aside>
@@ -242,6 +194,20 @@ const Index = () => {
                     {experiences.map((exp) => (
                       <ExperienceCard key={exp.company} {...exp} />
                     ))}
+                  </div>
+                </section>
+
+                <section id="achievements" className="space-y-6 mt-6">
+                  <h2 className="text-3xl font-bold">Achievements</h2>
+                  <div className="border border-border rounded-lg p-4 sm:p-6 bg-card">
+                    <ul className="space-y-3 text-sm sm:text-base text-foreground">
+                      {achievements.map((achievement) => (
+                        <li key={achievement} className="flex gap-2">
+                          <span className="text-muted-foreground">•</span>
+                          <span>{achievement}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </section>
               </Tabs>
