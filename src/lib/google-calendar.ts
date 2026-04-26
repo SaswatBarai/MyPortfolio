@@ -17,6 +17,17 @@ export interface CalendarEventResult {
   htmlLink: string;
 }
 
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T00:00:00`);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
 export async function createMeetingEvent(params: {
   summary: string;
   description: string;
@@ -29,7 +40,9 @@ export async function createMeetingEvent(params: {
   const { summary, description, date, startTime, endTime, attendeeEmail, attendeeName } = params;
 
   const startDateTime = `${date}T${startTime}:00`;
-  const endDateTime = `${date}T${endTime}:00`;
+  // If end is before start in minutes, the meeting crosses midnight → end is next day
+  const endDate = timeToMinutes(endTime) < timeToMinutes(startTime) ? addDays(date, 1) : date;
+  const endDateTime = `${endDate}T${endTime}:00`;
 
   const event = await calendar.events.insert({
     calendarId: process.env.GOOGLE_CALENDAR_ID,

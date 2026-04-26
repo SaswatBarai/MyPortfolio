@@ -51,23 +51,19 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (reqStart >= reqEnd) {
+    // Enforce exactly 60-minute duration
+    const duration = reqEnd - reqStart;
+    if (duration !== 60) {
       return NextResponse.json(
-        { error: "Start time must be before end time" },
-        { status: 400 }
-      );
-    }
-    if (reqEnd - reqStart < 15) {
-      return NextResponse.json(
-        { error: "Minimum booking duration is 15 minutes" },
+        { error: "Meeting must be exactly 60 minutes" },
         { status: 400 }
       );
     }
 
-    // Check for conflicts with existing pending/approved requests on the same date
+    // Check for conflicts with approved meetings only (pending are tentative)
     const existing = await ScheduleRequestModel.find({
       date: slot.date,
-      status: { $in: ["pending", "approved"] },
+      status: "approved",
     }).select("startTime endTime");
 
     for (const req of existing) {
@@ -79,7 +75,7 @@ export async function POST(request: NextRequest) {
       }
       if (reqStart < exEnd && exStart < reqEnd) {
         return NextResponse.json(
-          { error: `This time overlaps with an existing booking (${req.startTime}–${req.endTime}). Please pick a different slot.` },
+          { error: `This time overlaps with a confirmed meeting (${req.startTime}–${req.endTime}). Please pick a different time.` },
           { status: 409 }
         );
       }

@@ -22,6 +22,7 @@ interface Slot {
 interface BookedRange {
   startTime: string;
   endTime: string;
+  status: "pending" | "approved";
 }
 
 type Step = "calendar" | "slots" | "form" | "success";
@@ -36,6 +37,13 @@ interface Props {
 function toMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
+}
+
+function addMinutes(hhmm: string, mins: number): string {
+  const total = toMinutes(hhmm) + mins;
+  const h = Math.floor(total / 60) % 24;
+  const m = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
 function hhmm_to_12h(hhmm: string): { hour: string; minute: string; period: "AM" | "PM" } {
@@ -61,7 +69,7 @@ function fmt12(hhmm: string): string {
   return `${hour}:${minute} ${period}`;
 }
 
-// ── 12-hour time picker ───────────────────────────────────────────────────────
+// ── 12-hour start-time picker (end is auto-computed +1 hour) ─────────────────
 
 const HOURS   = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 const MINUTES = ["00", "15", "30", "45"];
@@ -70,7 +78,7 @@ const selectCls =
   "bg-card border-2 border-border px-2 py-2 font-mono text-sm text-foreground " +
   "focus:outline-none focus:border-foreground transition-colors appearance-none text-center cursor-pointer";
 
-function TimePicker12({
+function StartTimePicker({
   value,
   onChange,
 }: {
@@ -84,35 +92,28 @@ function TimePicker12({
 
   return (
     <div className="flex items-center gap-1">
-      {/* Hour */}
       <select
         value={p.hour}
         onChange={(e) => emit(e.target.value, p.minute, p.period)}
         className={selectCls + " w-14"}
       >
         {HOURS.map((h) => (
-          <option key={h} value={String(h)}>
-            {h}
-          </option>
+          <option key={h} value={String(h)}>{h}</option>
         ))}
       </select>
 
       <span className="font-mono text-sm text-muted-foreground">:</span>
 
-      {/* Minute */}
       <select
         value={p.minute}
         onChange={(e) => emit(p.hour, e.target.value, p.period)}
         className={selectCls + " w-14"}
       >
         {MINUTES.map((m) => (
-          <option key={m} value={m}>
-            {m}
-          </option>
+          <option key={m} value={m}>{m}</option>
         ))}
       </select>
 
-      {/* AM / PM */}
       <button
         type="button"
         onClick={() => emit(p.hour, p.minute, p.period === "AM" ? "PM" : "AM")}
@@ -132,7 +133,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
   const [availableSlots, setAvailableSlots] = useState<Slot[]>([]);
   const [bookedRanges, setBookedRanges] = useState<BookedRange[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
-  const [chosenTime, setChosenTime] = useState({ startTime: "", endTime: "" });
+  const [chosenStart, setChosenStart] = useState("");
   const [timeError, setTimeError] = useState("");
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -147,7 +148,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
         setAvailableSlots([]);
         setBookedRanges([]);
         setSelectedSlot(null);
-        setChosenTime({ startTime: "", endTime: "" });
+        setChosenStart("");
         setTimeError("");
         setForm({ name: "", email: "", message: "" });
         setError("");
@@ -159,7 +160,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
     setLoadingSlots(true);
     setError("");
     setSelectedSlot(null);
-    setChosenTime({ startTime: "", endTime: "" });
+    setChosenStart("");
     setTimeError("");
     try {
       const res = await fetch(`/api/schedule/slots?date=${format(date, "yyyy-MM-dd")}`);
@@ -169,7 +170,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
       if ((data.slots ?? []).length === 1) {
         const only = data.slots[0] as Slot;
         setSelectedSlot(only);
-        setChosenTime({ startTime: only.startTime, endTime: only.endTime });
+        setChosenStart(only.startTime);
       }
       setStep("slots");
     } catch {
@@ -185,31 +186,30 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
     fetchSlots(date);
   }
 
+  // Derived: end is always start + 60 min
+  const chosenEnd = chosenStart ? addMinutes(chosenStart, 60) : "";
+
   function validateChosenTime(): string {
     if (!selectedSlot) return "Select an availability window first";
-    if (!chosenTime.startTime || !chosenTime.endTime) return "Pick a start and end time";
+    if (!chosenStart) return "Pick a start time";
 
     const ws = toMinutes(selectedSlot.startTime);
-    // If the window crosses midnight, treat end as +1440
     let we = toMinutes(selectedSlot.endTime);
     const overnight = we <= ws;
     if (overnight) we += 1440;
 
-    let s = toMinutes(chosenTime.startTime);
-    let e = toMinutes(chosenTime.endTime);
+    let s = toMinutes(chosenStart);
+    let e = s + 60; // always 1 hour
 
-    // Normalise chosen times into the overnight window if needed
-    if (overnight) {
-      if (s < ws) s += 1440;
-      if (e <= ws) e += 1440;
-    }
+    if (overnight && s < ws) s += 1440;
+    e = s + 60;
 
     if (s < ws || e > we)
-      return `Time must be within the ${fmt12(selectedSlot.startTime)}–${fmt12(selectedSlot.endTime)} window`;
-    if (s >= e) return "Start time must be before end time";
-    if (e - s < 15) return "Minimum booking duration is 15 minutes";
+      return `1-hour meeting must fit within ${fmt12(selectedSlot.startTime)}–${fmt12(selectedSlot.endTime)}`;
 
     for (const br of bookedRanges) {
+      // Only block on approved meetings (pending ones are "tentative")
+      if (br.status !== "approved") continue;
       let brs = toMinutes(br.startTime);
       let bre = toMinutes(br.endTime);
       if (overnight) {
@@ -217,7 +217,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
         if (bre <= ws) bre += 1440;
       }
       if (s < bre && brs < e)
-        return `Conflicts with an existing booking (${fmt12(br.startTime)}–${fmt12(br.endTime)})`;
+        return `Conflicts with an approved meeting (${fmt12(br.startTime)}–${fmt12(br.endTime)})`;
     }
     return "";
   }
@@ -244,8 +244,8 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
           name: form.name,
           email: form.email,
           slotId: selectedSlot._id,
-          startTime: chosenTime.startTime,
-          endTime: chosenTime.endTime,
+          startTime: chosenStart,
+          endTime: chosenEnd,
           message: form.message,
         }),
       });
@@ -352,7 +352,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
                         key={slot._id}
                         onClick={() => {
                           setSelectedSlot(slot);
-                          setChosenTime({ startTime: slot.startTime, endTime: slot.endTime });
+                          setChosenStart(slot.startTime);
                           setTimeError("");
                         }}
                         className={`border-2 px-3 py-3 text-left transition-all ${
@@ -377,52 +377,63 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
                   {/* Time picker panel */}
                   {selectedSlot && (
                     <div className="border-2 border-border p-4 flex flex-col gap-3">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                        pick your time · window {fmt12(selectedSlot.startTime)}–{fmt12(selectedSlot.endTime)}
-                        {toMinutes(selectedSlot.endTime) <= toMinutes(selectedSlot.startTime) && (
-                          <span className="ml-1 text-muted-foreground/60">(next day)</span>
-                        )}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                          pick start · window {fmt12(selectedSlot.startTime)}–{fmt12(selectedSlot.endTime)}
+                          {toMinutes(selectedSlot.endTime) <= toMinutes(selectedSlot.startTime) && (
+                            <span className="ml-1 text-muted-foreground/60">(next day)</span>
+                          )}
+                        </p>
+                        <span className="font-mono text-[9px] text-accent border border-accent/30 px-1.5 py-0.5 shrink-0">
+                          1 hr fixed
+                        </span>
+                      </div>
 
-                      {/* Already-booked ranges */}
+                      {/* Already-scheduled meetings */}
                       {bookedRanges.length > 0 && (
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1.5">
                           <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
-                            already taken
+                            already scheduled
                           </p>
-                          <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-col gap-1">
                             {bookedRanges.map((br, i) => (
-                              <span
-                                key={i}
-                                className="font-mono text-[9px] border border-destructive/40 text-destructive/70 px-1.5 py-0.5"
-                              >
-                                {fmt12(br.startTime)}–{fmt12(br.endTime)}
-                              </span>
+                              <div key={i} className="flex items-center gap-2">
+                                <span className={`font-mono text-[9px] border px-1.5 py-0.5 shrink-0 ${
+                                  br.status === "approved"
+                                    ? "border-destructive/60 text-destructive/80 bg-destructive/5"
+                                    : "border-yellow-500/40 text-yellow-500/80 bg-yellow-500/5"
+                                }`}>
+                                  {br.status === "approved" ? "confirmed" : "pending"}
+                                </span>
+                                <span className="font-mono text-[9px] text-muted-foreground">
+                                  {fmt12(br.startTime)} – {fmt12(br.endTime)}
+                                </span>
+                              </div>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1">
-                          <label className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                            start
-                          </label>
-                          <TimePicker12
-                            value={chosenTime.startTime}
-                            onChange={(v) => { setChosenTime((p) => ({ ...p, startTime: v })); setTimeError(""); }}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <label className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                            end
-                          </label>
-                          <TimePicker12
-                            value={chosenTime.endTime}
-                            onChange={(v) => { setChosenTime((p) => ({ ...p, endTime: v })); setTimeError(""); }}
-                          />
-                        </div>
+                      {/* Start time + auto end */}
+                      <div className="flex flex-col gap-1">
+                        <label className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                          start time
+                        </label>
+                        <StartTimePicker
+                          value={chosenStart || selectedSlot.startTime}
+                          onChange={(v) => { setChosenStart(v); setTimeError(""); }}
+                        />
                       </div>
+
+                      {chosenStart && (
+                        <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground border border-border bg-muted/50 px-3 py-2">
+                          <Clock className="h-3 w-3 shrink-0" />
+                          <span>
+                            {fmt12(chosenStart)} → {fmt12(chosenEnd)}
+                            <span className="ml-2 text-[10px] text-accent">(60 min)</span>
+                          </span>
+                        </div>
+                      )}
 
                       {timeError && (
                         <p className="font-mono text-xs text-destructive">{timeError}</p>
@@ -447,7 +458,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
             <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               {selectedSlot && (
                 <div className="font-mono text-[10px] text-accent border border-border px-3 py-2 bg-muted mb-1">
-                  → {fmt12(chosenTime.startTime)}–{fmt12(chosenTime.endTime)} ·{" "}
+                  → {fmt12(chosenStart)}–{fmt12(chosenEnd)} · 60 min ·{" "}
                   {format(new Date(selectedSlot.date + "T00:00:00"), "MMM d, yyyy")}
                 </div>
               )}

@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
         date,
         status: { $in: ["pending", "approved"] },
       })
-        .select("startTime endTime")
+        .select("startTime endTime status")
         .lean();
 
       return NextResponse.json({
@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
         bookedRanges: booked.map((r) => ({
           startTime: r.startTime,
           endTime: r.endTime,
+          status: r.status,
         })),
       });
     }
