@@ -81,9 +81,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Limit each email to 2 requests per day (active requests only)
+    const existingForEmailOnDate = await ScheduleRequestModel.countDocuments({
+      date: slot.date,
+      email: email.toLowerCase(),
+      status: { $in: ["pending", "approved"] },
+    });
+    if (existingForEmailOnDate >= 2) {
+      return NextResponse.json(
+        { error: "You can schedule at most 2 calls per day with the same email." },
+        { status: 409 }
+      );
+    }
+
     const scheduleRequest = await ScheduleRequestModel.create({
       name,
-      email,
+      email: email.toLowerCase(),
       slotId: slot._id,
       date: slot.date,
       startTime,
