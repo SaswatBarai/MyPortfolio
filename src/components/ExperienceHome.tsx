@@ -1,3 +1,6 @@
+"use client";
+import { motion } from "framer-motion";
+
 interface ExperienceCardProps {
   company: string;
   role: string;
@@ -9,7 +12,11 @@ interface ExperienceCardProps {
 
 export const ExperienceCard = ({ company, role, duration, type, description, tech }: ExperienceCardProps) => {
   return (
-    <div className="border-2 border-border bg-card hover:border-foreground/40 transition-all duration-200 p-4 sm:p-5">
+    <motion.div
+      className="border-2 border-border bg-card hover:border-foreground/40 transition-colors duration-200 p-4 sm:p-5"
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    >
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3 pb-3 border-b border-border">
         <div>
@@ -40,6 +47,6 @@ export const ExperienceCard = ({ company, role, duration, type, description, tec
       <p className="font-mono text-[10px] text-muted-foreground border-t border-border pt-2.5">
         <span className="text-accent">$</span> {tech}
       </p>
-    </div>
+    </motion.div>
   );
 };

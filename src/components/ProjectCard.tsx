@@ -1,3 +1,5 @@
+"use client";
+import { motion } from "framer-motion";
 import { Github, Globe, ExternalLink } from "lucide-react";
 import Image, { StaticImageData } from "next/image";
 
@@ -18,7 +20,11 @@ interface ProjectCardProps {
 
 export const ProjectCard = ({ title, date, description, tags, image, links }: ProjectCardProps) => {
   return (
-    <div className="group border-2 border-border bg-card hover:border-foreground/40 transition-all duration-200">
+    <motion.div
+      className="group border-2 border-border bg-card hover:border-foreground/40 transition-colors duration-200"
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    >
       <div className="flex flex-row items-start gap-0">
         {/* Image — retro thumbnail style */}
         <div className="flex-shrink-0 border-r-2 border-border">
@@ -83,6 +89,6 @@ export const ProjectCard = ({ title, date, description, tags, image, links }: Pr
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

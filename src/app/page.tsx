@@ -12,6 +12,8 @@ import { ExperienceCard } from "@/components/ExperienceHome";
 import { HireMe } from "@/components/HireMe";
 import Preloader from "@/components/Preloader";
 import ScheduleCallModal from "@/components/ScheduleCallModal";
+import { FadeIn } from "@/components/FadeIn";
+import { motion } from "framer-motion";
 
 const projects = [
   {
@@ -72,7 +74,12 @@ export default function Index() {
 
       <div className="max-w-5xl mx-auto px-3 sm:px-6 py-5 sm:py-8">
         {/* ── Hero banner — full-width editorial header ── */}
-        <div className="border-2 border-border mb-6">
+        <motion.div
+          className="border-2 border-border mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
+        >
           {/* Top rule */}
           <div className="border-b-2 border-border px-3 sm:px-5 py-2 flex items-center justify-between bg-muted">
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -97,42 +104,51 @@ export default function Index() {
             </div>
 
             {/* Mobile layout: compact side-by-side photo + actions */}
-            <div className="mt-5 grid grid-cols-[120px_1fr] gap-3 w-full md:hidden">
+            <div className="mt-5 grid grid-cols-[150px_1fr] gap-3 w-full md:hidden">
               <div className="border-2 border-border bg-card p-1 overflow-hidden h-fit">
                 <Image
                   src="/profile.jpg"
                   alt="Saswat Barai"
-                  width={120}
-                  height={120}
-                  className="h-[120px] w-[120px] object-cover object-center scale-110"
+                  width={150}
+                  height={160}
+                  className="h-[160px] w-[150px] object-cover object-[center_10%] scale-125"
                   priority
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <button
+                <motion.button
                   onClick={() => setScheduleOpen(true)}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-accent text-accent-foreground font-mono text-[10px] uppercase tracking-[0.14em] transition-colors border-2 border-accent"
                 >
                   <Phone className="h-3 w-3" />
                   Schedule Call
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => openExternal("https://drive.google.com")}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-transparent text-foreground font-mono text-[10px] uppercase tracking-[0.14em] transition-colors border-2 border-border"
                 >
                   <FileText className="h-3 w-3" />
                   Resume
-                </button>
+                </motion.button>
                 <div className="grid grid-cols-3 gap-2">
                   {socials.map(({ icon: Icon, label, href }) => (
-                    <button
+                    <motion.button
                       key={label}
                       onClick={() => openExternal(href)}
                       title={label}
+                      whileHover={{ y: -2, scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
                       className="flex items-center justify-center py-2 border-2 border-border text-muted-foreground transition-colors"
                     >
                       <Icon className="h-3.5 w-3.5" />
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -144,62 +160,73 @@ export default function Index() {
                 <Image
                   src="/profile.jpg"
                   alt="Saswat Barai"
-                  width={176}
-                  height={176}
-                  className="h-40 w-40 object-cover object-center scale-110"
+                  width={220}
+                  height={260}
+                  className="h-[260px] w-[220px] object-cover object-[center_10%]"
                   priority
                 />
               </div>
-              <div className="flex flex-col gap-2 w-40">
-                <button
+              <div className="flex flex-col gap-2 w-[220px]">
+                <motion.button
                   onClick={() => setScheduleOpen(true)}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-accent text-accent-foreground font-mono text-[10px] uppercase tracking-widest border-2 border-accent"
                 >
                   <Phone className="h-3 w-3" />
                   Schedule a call
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   onClick={() => openExternal("https://drive.google.com")}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.15 }}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-transparent text-foreground font-mono text-[10px] uppercase tracking-widest border-2 border-border"
                 >
                   <FileText className="h-3 w-3" />
                   Resume
-                </button>
+                </motion.button>
                 <div className="flex gap-2">
                   {socials.map(({ icon: Icon, label, href }) => (
-                    <button
+                    <motion.button
                       key={label}
                       onClick={() => openExternal(href)}
                       title={label}
+                      whileHover={{ y: -2, scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
                       className="flex-1 flex items-center justify-center py-2 border-2 border-border text-muted-foreground"
                     >
                       <Icon className="h-3.5 w-3.5" />
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* ── Two-column body ── */}
         <div className="flex flex-col lg:flex-row gap-6">
 
           {/* ── Left sidebar — tech stack ── */}
-          <aside className="lg:w-56 shrink-0 lg:sticky lg:top-[60px] lg:self-start">
-            <div className="border-2 border-border">
-              <div className="border-b-2 border-border px-3 py-2 bg-muted">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">tech_stack.json</span>
+          <FadeIn direction="left" delay={0.2} className="lg:w-56 shrink-0 lg:sticky lg:top-[60px] lg:self-start">
+            <aside>
+              <div className="border-2 border-border">
+                <div className="border-b-2 border-border px-3 py-2 bg-muted">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">tech_stack.json</span>
+                </div>
+                <div className="p-4 space-y-4">
+                  <TechStack category="Languages" technologies="JavaScript, TypeScript, Java, Python, PostgreSQL, C" />
+                  <TechStack category="Frameworks" technologies="Next.js, React.js, Node.js, Express, Redux" />
+                  <TechStack category="Data & ML" technologies="NumPy, Pandas, Scikit-learn" />
+                  <TechStack category="DevOps" technologies="Docker, Kafka, Kong, Vault, Redis" />
+                  <TechStack category="Cloud" technologies="AWS EC2, AWS S3, Firebase, Prometheus, Grafana" />
+                </div>
               </div>
-              <div className="p-4 space-y-4">
-                <TechStack category="Languages" technologies="JavaScript, TypeScript, Java, Python, PostgreSQL, C" />
-                <TechStack category="Frameworks" technologies="Next.js, React.js, Node.js, Express, Redux" />
-                <TechStack category="Data & ML" technologies="NumPy, Pandas, Scikit-learn" />
-                <TechStack category="DevOps" technologies="Docker, Kafka, Kong, Vault, Redis" />
-                <TechStack category="Cloud" technologies="AWS EC2, AWS S3, Firebase, Prometheus, Grafana" />
-              </div>
-            </div>
-          </aside>
+            </aside>
+          </FadeIn>
 
           {/* ── Main content ── */}
           <main className="flex-1 min-w-0">
@@ -207,78 +234,96 @@ export default function Index() {
 
               {/* Projects */}
               <section id="projects" className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
-                    // projects
-                  </h2>
-                  <div className="flex-1 border-t border-border" />
-                  <span className="font-mono text-[10px] text-muted-foreground">{projects.length} items</span>
-                </div>
+                <FadeIn>
+                  <div className="flex items-center gap-3 mb-4">
+                    <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
+                      // projects
+                    </h2>
+                    <div className="flex-1 border-t border-border" />
+                    <span className="font-mono text-[10px] text-muted-foreground">{projects.length} items</span>
+                  </div>
+                </FadeIn>
                 <div className="space-y-3">
-                  {projects.map((project) => (
-                    <ProjectCard key={project.title} {...project} />
+                  {projects.map((project, i) => (
+                    <FadeIn key={project.title} delay={i * 0.06}>
+                      <ProjectCard {...project} />
+                    </FadeIn>
                   ))}
                 </div>
-                <div className="mt-3">
-                  <a href="#" className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    → view all projects
-                  </a>
-                </div>
+                <FadeIn delay={projects.length * 0.06}>
+                  <div className="mt-3">
+                    <a href="#" className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors">
+                      → view all projects
+                    </a>
+                  </div>
+                </FadeIn>
               </section>
 
               {/* Experience */}
               <section id="experience" className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
-                    // experience
-                  </h2>
-                  <div className="flex-1 border-t border-border" />
-                </div>
+                <FadeIn>
+                  <div className="flex items-center gap-3 mb-4">
+                    <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
+                      // experience
+                    </h2>
+                    <div className="flex-1 border-t border-border" />
+                  </div>
+                </FadeIn>
                 <div className="space-y-3">
-                  {experiences.map((exp) => (
-                    <ExperienceCard key={exp.company} {...exp} />
+                  {experiences.map((exp, i) => (
+                    <FadeIn key={exp.company} delay={i * 0.06}>
+                      <ExperienceCard {...exp} />
+                    </FadeIn>
                   ))}
                 </div>
               </section>
 
               {/* Achievements */}
               <section id="achievements" className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
-                    // achievements
-                  </h2>
-                  <div className="flex-1 border-t border-border" />
-                </div>
-                <div className="border-2 border-border bg-card">
-                  {achievements.map((achievement, idx) => (
-                    <div
-                      key={idx}
-                      className="flex gap-3 px-4 py-3 border-b last:border-b-0 border-border text-xs leading-relaxed"
-                    >
-                      <span className="font-mono text-accent shrink-0 mt-0.5">
-                        {String(idx + 1).padStart(2, "0")}.
-                      </span>
-                      <span className="text-foreground/90">{achievement}</span>
-                    </div>
-                  ))}
-                </div>
+                <FadeIn>
+                  <div className="flex items-center gap-3 mb-4">
+                    <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
+                      // achievements
+                    </h2>
+                    <div className="flex-1 border-t border-border" />
+                  </div>
+                </FadeIn>
+                <FadeIn delay={0.1}>
+                  <div className="border-2 border-border bg-card">
+                    {achievements.map((achievement, idx) => (
+                      <div
+                        key={idx}
+                        className="flex gap-3 px-4 py-3 border-b last:border-b-0 border-border text-xs leading-relaxed"
+                      >
+                        <span className="font-mono text-accent shrink-0 mt-0.5">
+                          {String(idx + 1).padStart(2, "0")}.
+                        </span>
+                        <span className="text-foreground/90">{achievement}</span>
+                      </div>
+                    ))}
+                  </div>
+                </FadeIn>
               </section>
             </Tabs>
 
             {/* Hire me */}
-            <HireMe />
+            <FadeIn>
+              <HireMe />
+            </FadeIn>
           </main>
         </div>
 
         {/* Footer */}
-        <footer className="mt-10 border-t-2 border-border pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-            © {new Date().getFullYear()} Saswat Barai
-          </span>
-          <span className="font-mono text-[10px] text-muted-foreground">
-            Built with Next.js · Deployed on Vercel
-          </span>
-        </footer>
+        <FadeIn>
+          <footer className="mt-10 border-t-2 border-border pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
+              © {new Date().getFullYear()} Saswat Barai
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              Built with Next.js · Deployed on Vercel
+            </span>
+          </footer>
+        </FadeIn>
       </div>
 
       <ScheduleCallModal open={scheduleOpen} onClose={() => setScheduleOpen(false)} />
