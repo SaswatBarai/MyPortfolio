@@ -3,10 +3,6 @@
 import { useState, useEffect } from "react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -56,14 +52,13 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
   async function fetchSlots(date: Date) {
     setLoadingSlots(true);
     setError("");
-    const dateStr = format(date, "yyyy-MM-dd");
     try {
-      const res = await fetch(`/api/schedule/slots?date=${dateStr}`);
+      const res = await fetch(`/api/schedule/slots?date=${format(date, "yyyy-MM-dd")}`);
       const data = await res.json();
       setAvailableSlots(data.slots ?? []);
       setStep("slots");
     } catch {
-      setError("Failed to load slots. Please try again.");
+      setError("Failed to load slots.");
     } finally {
       setLoadingSlots(false);
     }
@@ -75,11 +70,6 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
     fetchSlots(date);
   }
 
-  function handleSlotSelect(slot: Slot) {
-    setSelectedSlot(slot);
-    setStep("form");
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedSlot) return;
@@ -89,18 +79,10 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
       const res = await fetch("/api/schedule/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          slotId: selectedSlot._id,
-          message: form.message,
-        }),
+        body: JSON.stringify({ name: form.name, email: form.email, slotId: selectedSlot._id, message: form.message }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Something went wrong. Please try again.");
-        return;
-      }
+      if (!res.ok) { setError(data.error ?? "Something went wrong."); return; }
       setStep("success");
     } catch {
       setError("Network error. Please try again.");
@@ -110,58 +92,51 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
   }
 
   const today = startOfDay(new Date());
-
-  const stepLabel = {
-    calendar: "Pick a date",
-    slots: "Choose a time",
-    form: "Your details",
-    success: "All set!",
-  }[step];
-
-  const stepDesc = {
-    calendar: "Select a date to see available slots.",
-    slots: selectedDate
-      ? `Available on ${format(selectedDate, "MMMM d, yyyy")}`
-      : "",
-    form: selectedSlot
-      ? `${selectedSlot.startTime}–${selectedSlot.endTime} · ${selectedSlot.date ? format(new Date(selectedSlot.date + "T00:00:00"), "MMM d, yyyy") : ""}`
-      : "",
-    success: "Your request has been received.",
-  }[step];
+  const steps: Step[] = ["calendar", "slots", "form", "success"];
+  const stepIdx = steps.indexOf(step);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md w-full bg-card border border-border shadow-2xl p-0 overflow-hidden">
-        {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            {(step === "slots" || step === "form") && (
-              <button
-                onClick={() => setStep(step === "form" ? "slots" : "calendar")}
-                className="text-muted-foreground hover:text-foreground transition-colors mr-1"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-            )}
-            <div>
-              <DialogTitle className="text-base font-semibold text-foreground">
-                {stepLabel}
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                {stepDesc}
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
+      <DialogContent className="max-w-md w-[calc(100vw-1rem)] sm:w-full min-h-[520px] max-h-[92vh] bg-background border-2 border-border rounded-none shadow-2xl p-0 overflow-hidden">
+        {/* Terminal titlebar */}
+        <div className="flex items-center gap-2 px-4 py-2 border-b-2 border-border bg-muted">
+          {(step === "slots" || step === "form") && (
+            <button
+              onClick={() => setStep(step === "form" ? "slots" : "calendar")}
+              className="text-muted-foreground hover:text-foreground transition-colors mr-1"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <DialogHeader className="flex-1 p-0">
+            <DialogTitle className="font-mono text-xs uppercase tracking-widest text-foreground text-left">
+              {step === "calendar" && "schedule_call.sh — pick date"}
+              {step === "slots"    && `schedule_call.sh — ${selectedDate ? format(selectedDate, "MMM d") : ""}`}
+              {step === "form"     && "schedule_call.sh — your details"}
+              {step === "success"  && "schedule_call.sh — queued ✓"}
+            </DialogTitle>
+            <DialogDescription className="sr-only">Schedule a call with Saswat</DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <div className="px-6 py-5">
+        {/* Progress bar */}
+        <div className="flex h-0.5 bg-border">
+          {steps.map((s, idx) => (
+            <div
+              key={s}
+              className={`flex-1 transition-colors ${idx <= stepIdx ? "bg-foreground" : "bg-transparent"}`}
+            />
+          ))}
+        </div>
+
+        <div className="p-4 sm:p-8 overflow-y-auto max-h-[calc(92vh-62px)]">
           {/* Step 1 — Calendar */}
           {step === "calendar" && (
             <div className="flex flex-col items-center gap-4">
               {loadingSlots ? (
-                <div className="flex items-center gap-2 py-10 text-muted-foreground text-sm">
-                  <Loader2 className="animate-spin h-4 w-4" />
-                  Loading slots…
+                <div className="flex items-center gap-2 py-10 font-mono text-xs text-muted-foreground">
+                  <Loader2 className="animate-spin h-3.5 w-3.5" />
+                  loading slots...
                 </div>
               ) : (
                 <Calendar
@@ -169,10 +144,10 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
                   selected={selectedDate}
                   onSelect={handleDateSelect}
                   disabled={(date) => isBefore(startOfDay(date), today)}
-                  className="rounded-lg border border-border bg-background"
+                  className="border-2 border-border rounded-none bg-card"
                 />
               )}
-              {error && <p className="text-xs text-destructive">{error}</p>}
+              {error && <p className="font-mono text-xs text-destructive">{error}</p>}
             </div>
           )}
 
@@ -180,125 +155,118 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
           {step === "slots" && (
             <div className="flex flex-col gap-3">
               {loadingSlots ? (
-                <div className="flex items-center gap-2 py-10 text-muted-foreground text-sm justify-center">
-                  <Loader2 className="animate-spin h-4 w-4" />
-                  Loading…
+                <div className="flex items-center gap-2 py-10 font-mono text-xs text-muted-foreground justify-center">
+                  <Loader2 className="animate-spin h-3.5 w-3.5" />
+                  loading...
                 </div>
               ) : availableSlots.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground text-sm">
-                  <Clock className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p className="mb-4">No slots available on this date.</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-border text-foreground hover:bg-muted"
+                <div className="text-center py-10">
+                  <Clock className="h-8 w-8 mx-auto mb-3 text-muted-foreground/30" />
+                  <p className="font-mono text-xs text-muted-foreground mb-4">→ no slots on this date</p>
+                  <button
                     onClick={() => setStep("calendar")}
+                    className="font-mono text-xs px-3 py-2 border-2 border-border text-foreground hover:bg-muted transition-colors"
                   >
-                    Pick another date
-                  </Button>
+                    ← pick another date
+                  </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {availableSlots.map((slot) => (
                     <button
                       key={slot._id}
-                      onClick={() => handleSlotSelect(slot)}
-                      className="rounded-lg border border-border bg-background px-4 py-3 text-sm font-medium text-foreground text-left hover:border-foreground/40 hover:bg-muted transition-colors"
+                      onClick={() => { setSelectedSlot(slot); setStep("form"); }}
+                      className="border-2 border-border bg-card px-3 py-3 text-left hover:border-foreground/60 hover:bg-muted transition-all"
                     >
-                      <span className="block text-xs text-muted-foreground mb-0.5">Available</span>
-                      {slot.startTime} – {slot.endTime}
+                      <span className="block font-mono text-[9px] text-muted-foreground uppercase tracking-widest mb-0.5">available</span>
+                      <span className="font-mono text-sm font-bold text-foreground">{slot.startTime}</span>
+                      <span className="font-mono text-xs text-muted-foreground"> – {slot.endTime}</span>
                     </button>
                   ))}
                 </div>
               )}
-              {error && <p className="text-xs text-destructive">{error}</p>}
+              {error && <p className="font-mono text-xs text-destructive">{error}</p>}
             </div>
           )}
 
           {/* Step 3 — Form */}
           {step === "form" && (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div className="grid gap-1.5">
-                <Label htmlFor="name" className="text-xs text-muted-foreground uppercase tracking-wide">
-                  Full name
-                </Label>
-                <Input
-                  id="name"
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              {selectedSlot && (
+                <div className="font-mono text-[10px] text-accent border border-border px-3 py-2 bg-muted mb-1">
+                  → Slot: {selectedSlot.startTime}–{selectedSlot.endTime} · {selectedSlot.date ? format(new Date(selectedSlot.date + "T00:00:00"), "MMM d, yyyy") : ""}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1">
+                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">name</label>
+                <input
                   placeholder="Jane Doe"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   required
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground/50"
+                  className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors"
                 />
               </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="email" className="text-xs text-muted-foreground uppercase tracking-wide">
-                  Email address
-                </Label>
-                <Input
-                  id="email"
+              <div className="flex flex-col gap-1">
+                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">email</label>
+                <input
                   type="email"
                   placeholder="jane@example.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground/50"
+                  className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors"
                 />
               </div>
-              <div className="grid gap-1.5">
-                <Label htmlFor="message" className="text-xs text-muted-foreground uppercase tracking-wide">
-                  What would you like to discuss?{" "}
-                  <span className="normal-case text-muted-foreground/60">(optional)</span>
-                </Label>
-                <Textarea
-                  id="message"
-                  placeholder="A brief description…"
+              <div className="flex flex-col gap-1">
+                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                  what to discuss? <span className="normal-case text-muted-foreground/50">(optional)</span>
+                </label>
+                <textarea
+                  placeholder="Brief description..."
                   rows={3}
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 resize-none"
+                  className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors resize-none"
                 />
               </div>
 
-              {error && <p className="text-xs text-destructive">{error}</p>}
+              {error && <p className="font-mono text-xs text-destructive">{error}</p>}
 
-              <Button
+              <button
                 type="submit"
-                disabled={submitting}
-                className="w-full bg-foreground text-background hover:bg-foreground/90 font-medium mt-1"
+                disabled={submitting || !form.name.trim() || !form.email.trim()}
+                className="w-full py-2.5 bg-foreground text-background font-mono text-xs uppercase tracking-widest hover:bg-foreground/90 transition-colors border-2 border-foreground disabled:opacity-50 disabled:cursor-not-allowed mt-1"
               >
                 {submitting ? (
-                  <>
-                    <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                    Sending…
-                  </>
+                  <span className="flex items-center justify-center gap-2"><Loader2 className="animate-spin h-3.5 w-3.5" />sending...</span>
                 ) : (
-                  "Request Call"
+                  "→ Request Call"
                 )}
-              </Button>
+              </button>
             </form>
           )}
 
           {/* Step 4 — Success */}
           {step === "success" && (
             <div className="flex flex-col items-center gap-4 py-8 text-center">
-              <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
-                <CheckCircle2 className="h-7 w-7 text-foreground" />
+              <div className="border-2 border-foreground p-4">
+                <CheckCircle2 className="h-8 w-8 text-foreground" />
               </div>
               <div>
-                <p className="font-semibold text-foreground">Request sent!</p>
-                <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
-                  Check your inbox for a confirmation.<br />
-                  Once approved, you'll receive a Google Meet link.
+                <p className="font-mono font-bold text-foreground mb-1">→ request queued</p>
+                <p className="font-mono text-xs text-muted-foreground leading-relaxed">
+                  check your inbox for confirmation.<br />
+                  meet link arrives on approval.
                 </p>
               </div>
-              <Button
+              <button
                 onClick={onClose}
-                variant="outline"
-                className="mt-1 border-border text-foreground hover:bg-muted"
+                className="px-6 py-2 border-2 border-border font-mono text-xs uppercase tracking-widest text-foreground hover:bg-muted transition-colors"
               >
-                Close
-              </Button>
+                close
+              </button>
             </div>
           )}
         </div>

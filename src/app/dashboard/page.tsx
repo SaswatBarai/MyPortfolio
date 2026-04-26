@@ -3,15 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   CheckCircle2, XCircle, Clock, Loader2, LogOut,
-  Plus, Trash2, ExternalLink, Calendar, Mail, User,
+  Plus, Trash2, ExternalLink, Calendar, Mail, User, RefreshCcw, AlertCircle,
 } from "lucide-react";
 
 interface ScheduleRequest {
@@ -35,26 +29,17 @@ interface Slot {
   booked: boolean;
 }
 
-const statusConfig = {
-  pending: {
-    label: "Pending",
-    icon: Clock,
-    className: "border-border text-muted-foreground bg-muted",
-  },
-  approved: {
-    label: "Approved",
-    icon: CheckCircle2,
-    className: "border-transparent text-green-400 bg-green-500/10",
-  },
-  rejected: {
-    label: "Rejected",
-    icon: XCircle,
-    className: "border-transparent text-red-400 bg-red-500/10",
-  },
+const statusMeta = {
+  pending:  { label: "pending",  Icon: Clock,        cls: "text-muted-foreground border-border" },
+  approved: { label: "approved", Icon: CheckCircle2, cls: "text-green-400 border-green-500/30" },
+  rejected: { label: "rejected", Icon: XCircle,      cls: "text-red-400 border-red-500/30" },
 };
+
+type TabKey = "pending" | "approved" | "rejected" | "slots";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabKey>("pending");
 
   const [requests, setRequests] = useState<ScheduleRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
@@ -65,14 +50,21 @@ export default function DashboardPage() {
   const [newSlot, setNewSlot] = useState({ date: "", startTime: "", endTime: "" });
   const [addingSlot, setAddingSlot] = useState(false);
   const [slotError, setSlotError] = useState("");
+  const [requestError, setRequestError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchRequests = useCallback(async () => {
     setLoadingRequests(true);
+    setRequestError("");
     try {
       const res = await fetch("/api/schedule/requests");
       if (res.status === 401) { router.push("/dashboard/login"); return; }
       const data = await res.json();
+      if (!res.ok) { setRequestError(data.error ?? "Could not load requests."); return; }
       setRequests(data.requests ?? []);
+    } catch {
+      setRequestError("Network error while loading requests.");
     } finally {
       setLoadingRequests(false);
     }
@@ -83,6 +75,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch("/api/schedule/slots");
       const data = await res.json();
+      if (!res.ok) { setSlotError(data.error ?? "Could not load slots."); return; }
       setSlots(data.slots ?? []);
     } finally {
       setLoadingSlots(false);
@@ -101,9 +94,8 @@ export default function DashboardPage() {
       const data = await res.json();
       if (!res.ok) { alert(data.error ?? "Failed to approve"); return; }
       await fetchRequests();
-    } finally {
-      setActionLoading(null);
-    }
+      setNotice("→ Request approved. Calendar invite sent.");
+    } finally { setActionLoading(null); }
   }
 
   async function handleReject(id: string) {
@@ -115,9 +107,8 @@ export default function DashboardPage() {
       if (!res.ok) { alert(data.error ?? "Failed to reject"); return; }
       await fetchRequests();
       await fetchSlots();
-    } finally {
-      setActionLoading(null);
-    }
+      setNotice("→ Request rejected.");
+    } finally { setActionLoading(null); }
   }
 
   async function handleAddSlot(e: React.FormEvent) {
@@ -134,15 +125,21 @@ export default function DashboardPage() {
       if (!res.ok) { setSlotError(data.error ?? "Failed to add slot"); return; }
       setNewSlot({ date: "", startTime: "", endTime: "" });
       await fetchSlots();
-    } finally {
-      setAddingSlot(false);
-    }
+      setNotice("→ Slot added.");
+    } finally { setAddingSlot(false); }
   }
 
   async function handleDeleteSlot(id: string) {
     if (!confirm("Delete this slot?")) return;
     await fetch(`/api/schedule/slots?id=${id}`, { method: "DELETE" });
     await fetchSlots();
+    setNotice("→ Slot deleted.");
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await Promise.all([fetchRequests(), fetchSlots()]);
+    setRefreshing(false);
   }
 
   async function handleLogout() {
@@ -150,7 +147,7 @@ export default function DashboardPage() {
     router.push("/dashboard/login");
   }
 
-  const pending = requests.filter((r) => r.status === "pending");
+  const pending  = requests.filter((r) => r.status === "pending");
   const approved = requests.filter((r) => r.status === "approved");
   const rejected = requests.filter((r) => r.status === "rejected");
 
@@ -159,37 +156,36 @@ export default function DashboardPage() {
   }
 
   function RequestCard({ req }: { req: ScheduleRequest }) {
-    const cfg = statusConfig[req.status];
-    const StatusIcon = cfg.icon;
+    const { label, Icon, cls } = statusMeta[req.status];
     return (
-      <Card className="border-border bg-card hover:shadow-md transition-shadow">
-        <CardContent className="pt-5 pb-4 flex flex-col gap-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="font-semibold text-sm text-foreground truncate">{req.name}</span>
-            </div>
-            <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${cfg.className}`}>
-              <StatusIcon className="h-3 w-3" />
-              {cfg.label}
-            </span>
+      <div className="border-2 border-border bg-card hover:border-foreground/30 transition-colors">
+        {/* Card header */}
+        <div className="flex items-center justify-between px-4 py-2 border-b-2 border-border bg-muted">
+          <div className="flex items-center gap-2">
+            <User className="h-3 w-3 text-muted-foreground" />
+            <span className="font-mono text-xs font-bold text-foreground">{req.name}</span>
           </div>
+          <span className={`font-mono text-[10px] uppercase tracking-widest border px-1.5 py-0.5 flex items-center gap-1 ${cls}`}>
+            <Icon className="h-2.5 w-2.5" />
+            {label}
+          </span>
+        </div>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Mail className="h-3.5 w-3.5 shrink-0" />
-            <a href={`mailto:${req.email}`} className="hover:text-foreground transition-colors truncate">
+        <div className="p-4 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+            <a href={`mailto:${req.email}`} className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors truncate">
               {req.email}
             </a>
           </div>
-
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5 shrink-0" />
-            <span>{formatSlot(req.date, req.startTime, req.endTime)}</span>
+          <div className="flex items-center gap-2">
+            <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
+            <span className="font-mono text-xs text-foreground/80">{formatSlot(req.date, req.startTime, req.endTime)}</span>
           </div>
 
           {req.message && (
-            <p className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2 italic border border-border/50">
-              "{req.message}"
+            <p className="font-mono text-[11px] text-muted-foreground border border-border bg-background px-3 py-2 leading-relaxed">
+              &quot;{req.message}&quot;
             </p>
           )}
 
@@ -198,255 +194,267 @@ export default function DashboardPage() {
               href={req.meetLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-foreground hover:text-muted-foreground transition-colors font-medium"
+              className="inline-flex items-center gap-1.5 font-mono text-[11px] text-accent hover:underline"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Open Meet link
+              <ExternalLink className="h-3 w-3" />
+              open meet link →
             </a>
           )}
 
           {req.status === "pending" && (
             <div className="flex gap-2 pt-1">
-              <Button
-                size="sm"
+              <button
                 onClick={() => handleApprove(req._id)}
                 disabled={!!actionLoading}
-                className="bg-foreground text-background hover:bg-foreground/90 flex-1 text-xs h-8"
+                className="flex-1 py-2 bg-foreground text-background font-mono text-[11px] uppercase tracking-widest hover:bg-foreground/90 transition-colors border-2 border-foreground disabled:opacity-50 flex items-center justify-center gap-1"
               >
-                {actionLoading === req._id + "-approve" ? (
-                  <Loader2 className="animate-spin h-3.5 w-3.5" />
-                ) : (
-                  <><CheckCircle2 className="h-3.5 w-3.5 mr-1" />Approve</>
-                )}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
+                {actionLoading === req._id + "-approve"
+                  ? <Loader2 className="animate-spin h-3 w-3" />
+                  : <><CheckCircle2 className="h-3 w-3" /> approve</>
+                }
+              </button>
+              <button
                 onClick={() => handleReject(req._id)}
                 disabled={!!actionLoading}
-                className="border-border text-muted-foreground hover:text-foreground hover:bg-muted flex-1 text-xs h-8"
+                className="flex-1 py-2 bg-transparent text-muted-foreground font-mono text-[11px] uppercase tracking-widest hover:text-foreground hover:bg-muted transition-colors border-2 border-border disabled:opacity-50 flex items-center justify-center gap-1"
               >
-                {actionLoading === req._id + "-reject" ? (
-                  <Loader2 className="animate-spin h-3.5 w-3.5" />
-                ) : (
-                  <><XCircle className="h-3.5 w-3.5 mr-1" />Reject</>
-                )}
-              </Button>
+                {actionLoading === req._id + "-reject"
+                  ? <Loader2 className="animate-spin h-3 w-3" />
+                  : <><XCircle className="h-3 w-3" /> reject</>
+                }
+              </button>
             </div>
           )}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  function EmptyState({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
-    return (
-      <div className="text-center py-16 text-muted-foreground">
-        <Icon className="h-8 w-8 mx-auto mb-3 opacity-20" />
-        <p className="text-sm">{label}</p>
+        </div>
       </div>
     );
   }
 
+  function EmptyRow({ label }: { label: string }) {
+    return (
+      <div className="border-2 border-dashed border-border text-center py-14">
+        <p className="font-mono text-xs text-muted-foreground">→ {label}</p>
+      </div>
+    );
+  }
+
+  const tabs: { key: TabKey; label: string; badge?: number }[] = [
+    { key: "pending",  label: "pending",  badge: pending.length  },
+    { key: "approved", label: "approved" },
+    { key: "rejected", label: "rejected" },
+    { key: "slots",    label: "manage slots" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Top bar — matches portfolio navbar style */}
-      <header className="sticky top-0 z-50 border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b-2 border-border bg-background/95 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto flex items-start sm:items-center justify-between px-3 sm:px-6 py-3 gap-2">
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Portfolio</p>
-            <h1 className="text-sm font-semibold text-foreground">Dashboard</h1>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">admin_dashboard.sh</span>
+            <p className="font-mono text-[11px] sm:text-xs font-bold text-foreground">Saswat Barai · Dashboard</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Logout
-          </button>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="p-1.5 sm:p-2 border-2 border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors disabled:opacity-50"
+            >
+              {refreshing
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <RefreshCcw className="h-3.5 w-3.5" />
+              }
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1 px-2 sm:px-3 py-1.5 sm:py-2 border-2 border-border font-mono text-[10px] sm:text-[11px] uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+            >
+              <LogOut className="h-3 w-3" />
+              logout
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        {/* Notice */}
+        {notice && (
+          <div className="mb-4 border border-border bg-card px-3 py-2 flex items-center justify-between font-mono text-xs text-foreground">
+            <span>{notice}</span>
+            <button onClick={() => setNotice("")} className="text-muted-foreground hover:text-foreground ml-4">×</button>
+          </div>
+        )}
+        {requestError && (
+          <div className="mb-4 border border-destructive/50 bg-destructive/10 px-3 py-2 flex items-center gap-2 font-mono text-xs text-destructive">
+            <AlertCircle className="h-3 w-3 shrink-0" />
+            {requestError}
+          </div>
+        )}
+
+        {/* Stats row */}
+        <div className="grid grid-cols-3 border-2 border-border mb-6">
           {[
-            { label: "Pending", count: pending.length, color: "text-muted-foreground" },
-            { label: "Approved", count: approved.length, color: "text-green-400" },
-            { label: "Rejected", count: rejected.length, color: "text-red-400" },
-          ].map((stat) => (
-            <Card key={stat.label} className="border-border bg-card">
-              <CardContent className="pt-5 pb-4 text-center">
-                <p className={`text-3xl font-bold ${stat.color}`}>{stat.count}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wide">{stat.label}</p>
-              </CardContent>
-            </Card>
+            { label: "pending",  count: pending.length,  cls: "text-foreground" },
+            { label: "approved", count: approved.length, cls: "text-green-400" },
+            { label: "rejected", count: rejected.length, cls: "text-red-400" },
+          ].map((s, i) => (
+            <div
+              key={s.label}
+              className={`text-center py-4 ${i < 2 ? "border-r-2 border-border" : ""}`}
+            >
+              <p className={`font-mono text-2xl sm:text-3xl font-bold ${s.cls}`}>{s.count}</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{s.label}</p>
+            </div>
           ))}
         </div>
 
-        <Tabs defaultValue="pending">
-          <TabsList className="mb-6 bg-muted/50 border border-border">
-            <TabsTrigger value="pending" className="text-xs data-[state=active]:bg-card data-[state=active]:text-foreground">
-              Pending
-              {pending.length > 0 && (
-                <Badge className="ml-1.5 bg-foreground text-background text-[10px] px-1.5 py-0 h-4">
-                  {pending.length}
-                </Badge>
+        {/* Tab bar */}
+        <div className="grid grid-cols-2 sm:flex border-2 border-border mb-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 px-2 sm:px-3 py-2 font-mono text-[10px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-widest transition-colors border-r border-border even:border-r-0 sm:even:border-r last:border-r-0 relative ${
+                activeTab === tab.key
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              {tab.label}
+              {tab.badge !== undefined && tab.badge > 0 && (
+                <span className={`ml-1.5 font-mono text-[9px] px-1 ${activeTab === tab.key ? "bg-background/20 text-background" : "bg-foreground/10 text-foreground"}`}>
+                  {tab.badge}
+                </span>
               )}
-            </TabsTrigger>
-            <TabsTrigger value="approved" className="text-xs data-[state=active]:bg-card data-[state=active]:text-foreground">Approved</TabsTrigger>
-            <TabsTrigger value="rejected" className="text-xs data-[state=active]:bg-card data-[state=active]:text-foreground">Rejected</TabsTrigger>
-            <TabsTrigger value="slots" className="text-xs data-[state=active]:bg-card data-[state=active]:text-foreground">Manage Slots</TabsTrigger>
-          </TabsList>
+            </button>
+          ))}
+        </div>
 
-          <TabsContent value="pending">
-            {loadingRequests
-              ? <div className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2"><Loader2 className="animate-spin h-4 w-4" />Loading…</div>
-              : pending.length === 0
-                ? <EmptyState icon={Clock} label="No pending requests" />
-                : <div className="grid gap-3 sm:grid-cols-2">{pending.map((req) => <RequestCard key={req._id} req={req} />)}</div>
-            }
-          </TabsContent>
+        {/* Pending */}
+        {activeTab === "pending" && (
+          loadingRequests
+            ? <div className="flex items-center gap-2 py-14 justify-center font-mono text-xs text-muted-foreground"><Loader2 className="animate-spin h-3.5 w-3.5" />loading…</div>
+            : pending.length === 0
+              ? <EmptyRow label="no pending requests" />
+              : <div className="grid gap-3 lg:grid-cols-2">{pending.map((r) => <RequestCard key={r._id} req={r} />)}</div>
+        )}
 
-          <TabsContent value="approved">
-            {loadingRequests
-              ? <div className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2"><Loader2 className="animate-spin h-4 w-4" />Loading…</div>
-              : approved.length === 0
-                ? <EmptyState icon={CheckCircle2} label="No approved calls yet" />
-                : <div className="grid gap-3 sm:grid-cols-2">{approved.map((req) => <RequestCard key={req._id} req={req} />)}</div>
-            }
-          </TabsContent>
+        {/* Approved */}
+        {activeTab === "approved" && (
+          loadingRequests
+            ? <div className="flex items-center gap-2 py-14 justify-center font-mono text-xs text-muted-foreground"><Loader2 className="animate-spin h-3.5 w-3.5" />loading…</div>
+            : approved.length === 0
+              ? <EmptyRow label="no approved calls yet" />
+              : <div className="grid gap-3 lg:grid-cols-2">{approved.map((r) => <RequestCard key={r._id} req={r} />)}</div>
+        )}
 
-          <TabsContent value="rejected">
-            {loadingRequests
-              ? <div className="flex items-center justify-center py-16 text-muted-foreground text-sm gap-2"><Loader2 className="animate-spin h-4 w-4" />Loading…</div>
-              : rejected.length === 0
-                ? <EmptyState icon={XCircle} label="No rejected requests" />
-                : <div className="grid gap-3 sm:grid-cols-2">{rejected.map((req) => <RequestCard key={req._id} req={req} />)}</div>
-            }
-          </TabsContent>
+        {/* Rejected */}
+        {activeTab === "rejected" && (
+          loadingRequests
+            ? <div className="flex items-center gap-2 py-14 justify-center font-mono text-xs text-muted-foreground"><Loader2 className="animate-spin h-3.5 w-3.5" />loading…</div>
+            : rejected.length === 0
+              ? <EmptyRow label="no rejected requests" />
+              : <div className="grid gap-3 lg:grid-cols-2">{rejected.map((r) => <RequestCard key={r._id} req={r} />)}</div>
+        )}
 
-          <TabsContent value="slots">
-            <div className="grid gap-6 lg:grid-cols-2">
-              {/* Add slot */}
-              <Card className="border-border bg-card">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <Plus className="h-3.5 w-3.5" />
-                    Add Available Slot
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Add a time slot when you&apos;re free for a call.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleAddSlot} className="flex flex-col gap-4">
-                    <div className="grid gap-1.5">
-                      <Label htmlFor="slot-date" className="text-xs text-muted-foreground uppercase tracking-wide">
-                        Date
-                      </Label>
-                      <Input
-                        id="slot-date"
-                        type="date"
-                        value={newSlot.date}
-                        onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
-                        min={new Date().toISOString().slice(0, 10)}
-                        required
-                        className="bg-background border-border text-foreground text-sm"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="slot-start" className="text-xs text-muted-foreground uppercase tracking-wide">
-                          Start
-                        </Label>
-                        <Input
-                          id="slot-start"
-                          type="time"
-                          value={newSlot.startTime}
-                          onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
-                          required
-                          className="bg-background border-border text-foreground text-sm"
-                        />
-                      </div>
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="slot-end" className="text-xs text-muted-foreground uppercase tracking-wide">
-                          End
-                        </Label>
-                        <Input
-                          id="slot-end"
-                          type="time"
-                          value={newSlot.endTime}
-                          onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                          required
-                          className="bg-background border-border text-foreground text-sm"
-                        />
-                      </div>
-                    </div>
-                    {slotError && <p className="text-xs text-destructive">{slotError}</p>}
-                    <Button
-                      type="submit"
-                      disabled={addingSlot}
-                      className="bg-foreground text-background hover:bg-foreground/90 text-sm"
-                    >
-                      {addingSlot
-                        ? <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                        : <Plus className="h-4 w-4 mr-2" />
-                      }
-                      Add Slot
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
+        {/* Slots */}
+        {activeTab === "slots" && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Add slot form */}
+            <div className="border-2 border-border">
+              <div className="border-b-2 border-border bg-muted px-4 py-2">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">add_slot.sh</span>
+              </div>
+              <form onSubmit={handleAddSlot} className="p-4 flex flex-col gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">date</label>
+                  <input
+                    type="date"
+                    value={newSlot.date}
+                    onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
+                    min={new Date().toISOString().slice(0, 10)}
+                    required
+                    className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-foreground transition-colors"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">start</label>
+                    <input
+                      type="time"
+                      value={newSlot.startTime}
+                      onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
+                      required
+                      className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-foreground transition-colors"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">end</label>
+                    <input
+                      type="time"
+                      value={newSlot.endTime}
+                      onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
+                      required
+                      className="bg-card border-2 border-border px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:border-foreground transition-colors"
+                    />
+                  </div>
+                </div>
+                {slotError && <p className="font-mono text-xs text-destructive">{slotError}</p>}
+                <button
+                  type="submit"
+                  disabled={addingSlot}
+                  className="w-full py-2.5 bg-foreground text-background font-mono text-xs uppercase tracking-widest hover:bg-foreground/90 border-2 border-foreground transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {addingSlot
+                    ? <Loader2 className="animate-spin h-3.5 w-3.5" />
+                    : <Plus className="h-3.5 w-3.5" />
+                  }
+                  add slot
+                </button>
+              </form>
+            </div>
 
-              {/* Existing slots */}
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Upcoming Slots
-                </p>
+            {/* Slot list */}
+            <div className="border-2 border-border">
+              <div className="border-b-2 border-border bg-muted px-4 py-2 flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">upcoming slots</span>
+                <span className="font-mono text-[10px] text-accent">{slots.length} total</span>
+              </div>
+              <div className="max-h-80 overflow-y-auto">
                 {loadingSlots ? (
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
-                    <Loader2 className="animate-spin h-4 w-4" />Loading…
+                  <div className="flex items-center gap-2 py-8 justify-center font-mono text-xs text-muted-foreground">
+                    <Loader2 className="animate-spin h-3.5 w-3.5" />loading…
                   </div>
                 ) : slots.length === 0 ? (
-                  <p className="text-muted-foreground text-sm py-4">No upcoming slots. Add one.</p>
+                  <p className="font-mono text-xs text-muted-foreground p-4">→ no slots yet</p>
                 ) : (
-                  <div className="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1">
-                    {slots.map((slot) => (
-                      <div
-                        key={slot._id}
-                        className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-sm"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div>
-                            <span className="text-foreground font-medium text-xs">
-                              {format(new Date(slot.date + "T00:00:00"), "MMM d, yyyy")}
-                            </span>
-                            <span className="text-muted-foreground text-xs ml-2">
-                              {slot.startTime}–{slot.endTime}
-                            </span>
-                          </div>
-                          {slot.booked && (
-                            <span className="text-[10px] text-muted-foreground border border-border rounded-full px-2 py-0.5">
-                              booked
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => handleDeleteSlot(slot._id)}
-                          className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                  slots.map((slot, idx) => (
+                    <div
+                      key={slot._id}
+                      className={`flex items-center justify-between px-4 py-3 ${idx < slots.length - 1 ? "border-b border-border" : ""}`}
+                    >
+                      <div>
+                        <p className="font-mono text-xs font-bold text-foreground">
+                          {format(new Date(slot.date + "T00:00:00"), "MMM d, yyyy")}
+                        </p>
+                        <p className="font-mono text-[10px] text-muted-foreground">
+                          {slot.startTime} – {slot.endTime}
+                          {slot.booked && <span className="ml-2 text-accent">· booked</span>}
+                        </p>
                       </div>
-                    ))}
-                  </div>
+                      <button
+                        onClick={() => handleDeleteSlot(slot._id)}
+                        className="p-1.5 border border-border text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </main>
     </div>
   );

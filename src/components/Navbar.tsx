@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { Menu, X } from "lucide-react"
-import Image from 'next/image'
 
 interface NavbarProps {
   activeTab: string
@@ -11,25 +10,20 @@ interface NavbarProps {
 
 export default function Navbar({ activeTab, setActiveTab }: NavbarProps) {
   const [isOpen, setIsOpen] = React.useState(false)
-React.useEffect(() => {
-  const sections = document.querySelectorAll("section");
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveTab(entry.target.id);
-        }
-      });
-    },
-    { threshold: 0.5 }
-  );
 
-  sections.forEach((section) => observer.observe(section));
-
-  return () => observer.disconnect();
-}, [setActiveTab]);
-
-
+  React.useEffect(() => {
+    const sections = document.querySelectorAll("section");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActiveTab(entry.target.id);
+        });
+      },
+      { threshold: 0.4 }
+    );
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [setActiveTab]);
 
   const navItems = [
     { label: "Projects", value: "projects" },
@@ -39,66 +33,58 @@ React.useEffect(() => {
   ]
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-        {/* Left side - site name */}
-        <div className="text-sm font-medium tracking-tight">
-             <Image
-      src="/logo.svg"
-    height={20}
-    width={20}
-      alt="Picture of the author"
-    />
+    <header className="sticky top-0 z-50 border-b-2 border-border bg-background/95 backdrop-blur-sm">
+      <div className="max-w-5xl mx-auto flex items-center justify-between px-3 sm:px-6 py-3">
+        {/* Retro wordmark */}
+        <div className="font-mono text-xs sm:text-sm font-bold tracking-[0.16em] sm:tracking-widest uppercase text-foreground select-none">
+          <span className="text-accent">Saswat</span>
+          <span className="text-muted-foreground"> Barai</span>
         </div>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
-          {navItems.map((item) => (
+        {/* Desktop nav — retro tab style */}
+        <nav className="hidden md:flex items-center gap-0 border border-border">
+          {navItems.map((item, idx) => (
             <button
               key={item.value}
-             onClick={() => {
-  document.getElementById(item.value)?.scrollIntoView({ behavior: "smooth" });
-}}
-              className={`text-sm ${
+              onClick={() => document.getElementById(item.value)?.scrollIntoView({ behavior: "smooth" })}
+              className={`px-4 py-2 text-xs font-mono uppercase tracking-widest transition-colors border-r border-border last:border-r-0 ${
                 activeTab === item.value
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
-              {item.label}
+              {String(idx + 1).padStart(2, "0")}. {item.label}
             </button>
           ))}
-        </div>
+        </nav>
 
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
-          <button
-            className="text-foreground hover:text-muted-foreground"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
-        </div>
+        {/* Mobile toggle */}
+        <button
+          className="md:hidden text-foreground border border-border p-1.5"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile nav */}
       {isOpen && (
-        <div className="md:hidden border-t border-border bg-card/80 backdrop-blur-sm">
-          <nav className="flex flex-col gap-2 px-6 py-4 text-sm">
-            {navItems.map((item) => (
+        <div className="md:hidden border-t-2 border-border bg-background">
+          <nav className="flex flex-col">
+            {navItems.map((item, idx) => (
               <button
                 key={item.value}
                 onClick={() => {
-                  setActiveTab(item.value)
-                  setIsOpen(false)
+                  document.getElementById(item.value)?.scrollIntoView({ behavior: "smooth" });
+                  setIsOpen(false);
                 }}
-                className={`text-left ${
+                className={`px-6 py-3 text-xs font-mono uppercase tracking-widest text-left border-b border-border transition-colors ${
                   activeTab === item.value
-                    ? "text-foreground font-semibold"
+                    ? "bg-foreground text-background"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {item.label}
+                {String(idx + 1).padStart(2, "0")}. {item.label}
               </button>
             ))}
           </nav>

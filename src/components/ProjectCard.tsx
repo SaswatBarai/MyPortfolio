@@ -1,6 +1,4 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Github, Globe, Twitter, Youtube, Linkedin } from "lucide-react";
+import { Github, Globe, ExternalLink } from "lucide-react";
 import Image, { StaticImageData } from "next/image";
 
 interface ProjectCardProps {
@@ -20,81 +18,71 @@ interface ProjectCardProps {
 
 export const ProjectCard = ({ title, date, description, tags, image, links }: ProjectCardProps) => {
   return (
-    <Card className="p-4 sm:p-6 hover:shadow-lg transition-shadow border border-border bg-card">
-      {/* Mobile: Horizontal card layout */}
-      <div className="flex flex-row items-start gap-4">
-        {/* Image */}
-        <div className="flex-shrink-0">
+    <div className="group border-2 border-border bg-card hover:border-foreground/40 transition-all duration-200">
+      <div className="flex flex-row items-start gap-0">
+        {/* Image — retro thumbnail style */}
+        <div className="flex-shrink-0 border-r-2 border-border">
           <Image
             src={image}
             alt={title}
-            className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-border"
+            className="w-20 h-20 sm:w-24 sm:h-24 object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
             width={96}
             height={96}
             placeholder="empty"
           />
         </div>
 
-        {/* Text content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start mb-1">
-            <h3 className="text-base sm:text-lg font-semibold text-foreground truncate">
+        {/* Content */}
+        <div className="flex-1 min-w-0 p-3 sm:p-4">
+          <div className="flex justify-between items-start mb-1 gap-2">
+            <h3 className="text-sm sm:text-base font-bold text-foreground leading-tight">
               {title}
             </h3>
-            <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+            <span className="font-mono text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
               {date}
             </span>
           </div>
 
-          <p className="text-xs sm:text-sm text-muted-foreground mb-2 leading-snug line-clamp-2">
+          <p className="font-mono text-[11px] sm:text-xs text-muted-foreground mb-3 leading-relaxed line-clamp-2">
             {description}
           </p>
 
-          {/* Tech stack badges */}
-          <div className="flex overflow-x-auto gap-1.5 scrollbar-hide">
+          <div className="flex flex-wrap gap-1.5 mb-2">
             {tags.map((tag) => (
-              <Badge
+              <span
                 key={tag}
-                variant="secondary"
-                className="text-[10px] sm:text-xs font-normal px-2 py-0.5 whitespace-nowrap flex-shrink-0"
+                className="font-mono text-[10px] px-1.5 py-0.5 border border-border text-muted-foreground bg-muted whitespace-nowrap"
               >
                 {tag}
-              </Badge>
+              </span>
             ))}
           </div>
+
+          {/* Links */}
+          {links && (
+            <div className="flex gap-3">
+              {links.github && (
+                <a href={links.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+                  <Github className="h-3 w-3" />
+                  <span>src</span>
+                </a>
+              )}
+              {links.website && (
+                <a href={links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+                  <ExternalLink className="h-3 w-3" />
+                  <span>live</span>
+                </a>
+              )}
+              {links.linkedin && (
+                <a href={links.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+                  <Globe className="h-3 w-3" />
+                  <span>more</span>
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Links only on desktop */}
-      {links && (
-        <div className="hidden sm:flex gap-3 mt-3">
-          {links.github && (
-            <a href={links.github} target="_blank" rel="noopener noreferrer">
-              <Github className="h-4 w-4 text-foreground hover:text-muted-foreground transition-colors" />
-            </a>
-          )}
-          {links.website && (
-            <a href={links.website} target="_blank" rel="noopener noreferrer">
-              <Globe className="h-4 w-4 text-foreground hover:text-muted-foreground transition-colors" />
-            </a>
-          )}
-          {links.twitter && (
-            <a href={links.twitter} target="_blank" rel="noopener noreferrer">
-              <Twitter className="h-4 w-4 text-foreground hover:text-muted-foreground transition-colors" />
-            </a>
-          )}
-          {links.youtube && (
-            <a href={links.youtube} target="_blank" rel="noopener noreferrer">
-              <Youtube className="h-4 w-4 text-foreground hover:text-muted-foreground transition-colors" />
-            </a>
-          )}
-          {links.linkedin && (
-            <a href={links.linkedin} target="_blank" rel="noopener noreferrer">
-              <Linkedin className="h-4 w-4 text-foreground hover:text-muted-foreground transition-colors" />
-            </a>
-          )}
-        </div>
-      )}
-    </Card>
+    </div>
   );
 };

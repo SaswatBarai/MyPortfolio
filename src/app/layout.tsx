@@ -1,37 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const spaceMono = Space_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
   title: "Saswat Barai — Builder & Creator",
-  description: "Portfolio of Saswat Barai — CSE undergrad passionate about modern web development, AI, and creating elegant solutions to complex problems. Exploring React, Next.js, TailwindCSS, Node.js, and more.",
-  keywords: [
-    "Saswat Barai",
-    "Web Developer",
-    "React",
-    "Next.js",
-    "Tailwind CSS",
-    "AI Developer",
-    "Portfolio",
-    "Frontend Developer",
-    "Backend Developer",
-    "Software Engineer",
-  ],
-  authors: [{ name: "Saswat Barai", url: "https://saswat.dev" }], // Assuming a new URL; adjust if needed
+  description: "Portfolio of Saswat Barai — CSE undergrad passionate about modern web development, AI, and creating elegant solutions to complex problems.",
+  keywords: ["Saswat Barai", "Web Developer", "React", "Next.js", "Tailwind CSS", "Portfolio", "Backend Developer", "Software Engineer"],
+  authors: [{ name: "Saswat Barai", url: "https://saswat.dev" }],
   creator: "Saswat Barai",
-  
-  // 🎯 ICONS - Best for SEO
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -39,66 +28,35 @@ export const metadata: Metadata = {
       { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
       { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
     ],
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-    ],
-    other: [
-      {
-        rel: 'mask-icon',
-        url: '/safari-pinned-tab.svg',
-      },
-    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
-  
-  // 🎯 MANIFEST - Important for PWA and mobile SEO
   manifest: '/site.webmanifest',
-  
   openGraph: {
     title: "Saswat Barai — Builder & Creator",
-    description: "Portfolio of Saswat Barai — CSE undergrad passionate about modern web development, AI, and creating elegant solutions to complex problems.",
-    url: "https://saswat-barai.me", // Updated URL
+    description: "Portfolio of Saswat Barai — CSE undergrad passionate about modern web development.",
+    url: "https://saswat-barai.me",
     siteName: "Saswat's Portfolio",
-    images: [
-      {
-        url: "https://saswat.dev/og-image.png", // Updated URL
-        width: 1200,
-        height: 630,
-        alt: "Saswat Barai Portfolio"
-      }
-    ],
     locale: "en_US",
-    type: "website"
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Saswat Barai — Builder & Creator",
-    description: "Portfolio of Saswat Barai — CSE undergrad passionate about modern web development, AI, and creating elegant solutions to complex problems.",
-    images: ["https://saswat.dev/og-image.png"], // Updated URL
-    creator: "@saswat_ig" // Updated to match page.tsx
+    description: "Portfolio of Saswat Barai.",
+    creator: "@saswat_ig",
   },
-  
-  // 🎯 Additional SEO metadata
-  metadataBase: new URL('https://saswat.dev'), // Updated URL
-  alternates: {
-    canonical: '/',
-  },
+  metadataBase: new URL('https://saswat.dev'),
+  alternates: { canonical: '/' },
 };
 
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${spaceGrotesk.variable} ${spaceMono.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
           {children}

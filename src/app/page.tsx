@@ -1,45 +1,36 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-
 import { Tabs } from "@/components/ui/tabs";
 import { ProjectCard } from "@/components/ProjectCard";
 import { TechStack } from "@/components/TechStack";
-import { Github, Twitter, Linkedin } from "lucide-react";
-
+import { Github, Twitter, Linkedin, FileText, Phone } from "lucide-react";
+import Image from "next/image";
 import project1 from "@/assets/crypto-wallet-interface.jpg";
-import project2 from "@/assets/project2-fsP8Ek-i.jpg";
 import project3 from "@/assets/social-media-app-interface.png";
-import project4 from "@/assets/web.archive.org_web_20250402202821_https___dev.gxuri.in_ (1).png";
 import Navbar from "@/components/Navbar";
 import { ExperienceCard } from "@/components/ExperienceHome";
-import { HireMe } from "@/components/HireMe"; // ✅ Separate HireMe component
-import { redirect, RedirectType } from "next/navigation";
+import { HireMe } from "@/components/HireMe";
 import Preloader from "@/components/Preloader";
 import ScheduleCallModal from "@/components/ScheduleCallModal";
 
 const projects = [
   {
     title: "LMS Microservices Platform",
-    date: "Oct 2025 - Present",
+    date: "Oct 2025–Present",
     description:
       "Architected a scalable LMS using Node.js and TypeScript microservices, securing 10+ API endpoints via Kong API Gateway and HashiCorp Vault to support 1,000+ concurrent users.",
     tags: ["Node.js", "TypeScript", "Kafka", "Redis", "Kong", "Vault"],
     image: project1,
-    links: {
-      github: "#",
-    },
+    links: { github: "#" },
   },
   {
-    title: "Hiky (Real-time Messaging Platform)",
-    date: "May 2024 - Sept 2024",
+    title: "Hiky — Real-time Messaging",
+    date: "May–Sept 2024",
     description:
       "Built a real-time messaging platform with React.js and Node.js, achieving sub-100ms latency using WebSockets and Redis Pub/Sub for scalable cross-instance communication.",
     tags: ["React.js", "Node.js", "WebSockets", "Redis", "JWT/PASETO"],
     image: project3,
-    links: {
-      github: "#",
-    },
+    links: { github: "#" },
   },
 ];
 
@@ -47,7 +38,7 @@ const experiences = [
   {
     company: "CNX10 ITER (Technical Club)",
     role: "Backend Engineer",
-    duration: "Jan 2024 - Present",
+    duration: "Jan 2024–Present",
     type: ["Leadership", "On-site"],
     description: [
       "Architect and deploy server-side logic using Node.js and Express, supporting community-led technical projects for 500+ active members.",
@@ -63,171 +54,234 @@ const achievements = [
   "Mentored 45+ students in backend and frontend development through technical workshops, code reviews, and debugging sessions.",
 ];
 
-// const blogs = [
-//   {
-//     title: "Why Minimal UI Wins in 2025",
-//     date: "September 15, 2025",
-//     description:
-//       "Exploring why minimal, clean design continues to dominate modern web development and how Gen-Z developers approach UI.",
-//     tags: ["UI/UX", "Design", "Trends"],
-//     image: project1,
-//     link: "#",
-//   },
-//   {
-//     title: "Building a Portfolio that Lands Internships",
-//     date: "August 10, 2025",
-//     description:
-//       "A breakdown of what tech recruiters look for in portfolios, and how you can craft one that stands out in minutes.",
-//     tags: ["Career", "Portfolio", "Internship"],
-//     image: project3,
-//     link: "#",
-//   },
-// ];
+const socials = [
+  { icon: Github,   label: "GitHub",   href: "https://github.com/SaswatBarai" },
+  { icon: Twitter,  label: "Twitter",  href: "https://twitter.com/saswat_ig" },
+  { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/saswat-barai/" },
+];
 
-const Index = () => {
+export default function Index() {
   const [activeTab, setActiveTab] = useState("projects");
-  const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [scheduleOpen, setScheduleOpen] = useState(false);
-
-  const filteredProjects = projects;
+  const openExternal = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
   return (
-    <div
-      className="min-h-screen bg-background relative"
-      onMouseMove={(e) => setCursor({ x: e.clientX, y: e.clientY })}
-    >
+    <div className="min-h-screen bg-background">
       <Preloader />
-      {/* Spotlight Layer */}
-      <div
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          background: `radial-gradient(400px circle at ${cursor.x}px ${cursor.y}px, rgba(255,255,255,0.08), transparent 80%)`,
-        }}
-      />
+      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Content */}
-      <div className="relative z-10">
-        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 py-5 sm:py-8">
+        {/* ── Hero banner — full-width editorial header ── */}
+        <div className="border-2 border-border mb-6">
+          {/* Top rule */}
+          <div className="border-b-2 border-border px-3 sm:px-5 py-2 flex items-center justify-between bg-muted">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              portfolio.v3 — {new Date().getFullYear()}
+            </span>
+            <span className="font-mono text-[10px] text-accent animate-pulse">■ online</span>
+          </div>
 
-        <div className="max-w-6xl mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-[400px_1fr] gap-12">
-            {/* Sidebar */}
-            <aside className="space-y-8 md:sticky md:top-[73px] md:self-start md:max-h-[calc(100vh-73px)] md:overflow-y-auto">
-              <div>
-                <h1 className="text-4xl font-bold mb-2">Saswat Barai</h1>
-                <p className="text-lg text-muted-foreground mb-6">
-                  Backend Engineer and CSE Undergrad
-                </p>
-                <p className="text-sm text-foreground mb-6 leading-relaxed">
-                  I&apos;m a Computer Science undergraduate at{" "}
-                  <span className="font-semibold">Siksha &apos;O&apos; Anusandhan (ITER)</span>{" "}
-                  focused on building scalable backend systems and production-grade web applications.
-                  I work across microservices, distributed systems, and real-time platforms using modern
-                  JavaScript and TypeScript ecosystems.
-                </p>
+          <div className="p-4 sm:p-8 md:flex md:items-center md:justify-between gap-6 md:gap-8">
+            <div className="flex-1 md:max-w-2xl md:mx-auto text-left">
+              <p className="font-mono text-[10px] sm:text-xs text-accent uppercase tracking-[0.14em] sm:tracking-widest mb-2">
+                Software Engineer ↗ Backend Systems
+              </p>
+              <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-bold text-foreground leading-[0.95] tracking-tight mb-3 sm:mb-4">
+                Saswat<br />Barai
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground max-w-xl leading-relaxed">
+                CS undergrad at{" "}
+                <span className="text-foreground font-semibold">SOA University (ITER)</span>{" "}
+                — building scalable backend systems, microservices, and real-time platforms.
+              </p>
+            </div>
 
-                <div className="flex gap-2 mb-8">
-                  <Button
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={() => setScheduleOpen(true)}
-                  >
-                    Schedule a call
-                  </Button>
-                  <Button variant="outline">Resume</Button>
-                  <Button variant="outline" size="icon"
-                   onClick={() => redirect("https://github.com/SaswatBarai", RedirectType.push)}
-                  >
-                    <Github  className="h-4 w-4"
-                    />
-                  </Button>
-                  <Button variant="outline" size="icon"
-                   onClick={() => redirect("https://twitter.com/saswat_ig", RedirectType.push)}
-                  >
-                    <Twitter className="h-4 w-4"
-                   
-                    />
-                  </Button>
-                  <Button variant="outline" size="icon"
-                  onClick={() => redirect("https://www.linkedin.com/in/saswat-barai/", RedirectType.push)}
-                  >
-                    <Linkedin className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="space-y-3 text-sm">
-                  <TechStack
-                    category="Languages"
-                    technologies="JavaScript, TypeScript, Java, Python, PostgreSQL, C, HTML5/CSS3"
-                  />
-                  <TechStack category="Frameworks" technologies="Next.js, React.js, Node.js, Express, Redux, Tailwind CSS" />
-                  <TechStack category="Data & ML" technologies="NumPy, Pandas, Scikit-learn, Machine Learning" />
-                  <TechStack category="DevOps & Infra" technologies="Docker, Kafka, Kong API Gateway, HashiCorp Vault, Redis" />
-                  <TechStack category="Observability & Cloud" technologies="Prometheus, Grafana, ELK Stack, AWS (EC2/S3), Firebase, Git/GitHub, Postman" />
+            {/* Mobile layout: compact side-by-side photo + actions */}
+            <div className="mt-5 grid grid-cols-[120px_1fr] gap-3 w-full md:hidden">
+              <div className="border-2 border-border bg-card p-1 overflow-hidden h-fit">
+                <Image
+                  src="/profile.jpg"
+                  alt="Saswat Barai"
+                  width={120}
+                  height={120}
+                  className="h-[120px] w-[120px] object-cover object-center scale-110"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => setScheduleOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-accent text-accent-foreground font-mono text-[10px] uppercase tracking-[0.14em] transition-colors border-2 border-accent"
+                >
+                  <Phone className="h-3 w-3" />
+                  Schedule Call
+                </button>
+                <button
+                  onClick={() => openExternal("https://drive.google.com")}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-transparent text-foreground font-mono text-[10px] uppercase tracking-[0.14em] transition-colors border-2 border-border"
+                >
+                  <FileText className="h-3 w-3" />
+                  Resume
+                </button>
+                <div className="grid grid-cols-3 gap-2">
+                  {socials.map(({ icon: Icon, label, href }) => (
+                    <button
+                      key={label}
+                      onClick={() => openExternal(href)}
+                      title={label}
+                      className="flex items-center justify-center py-2 border-2 border-border text-muted-foreground transition-colors"
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                    </button>
+                  ))}
                 </div>
               </div>
-            </aside>
+            </div>
 
-            {/* Main Content */}
-            <main>
-              {/* Projects */}
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <section id="projects" className="space-y-6">
-                  <h2 className="text-3xl font-bold">Projects</h2>
-                  <div className="space-y-6">
-                    {filteredProjects.map((project) => (
-                      <ProjectCard key={project.title} {...project} />
-                    ))}
-                  </div>
-                  <div className="text-right sm:text-left mt-4">
-                    <a
-                      href="#"
-                      className="inline-flex items-center text-primary font-semibold group transition-all duration-300 "
+            {/* Desktop/tablet layout: vertical photo + actions */}
+            <div className="mt-5 md:mt-0 flex-shrink-0 hidden md:flex flex-col items-end gap-3">
+              <div className="border-2 border-border bg-card p-1 overflow-hidden">
+                <Image
+                  src="/profile.jpg"
+                  alt="Saswat Barai"
+                  width={176}
+                  height={176}
+                  className="h-40 w-40 object-cover object-center scale-110"
+                  priority
+                />
+              </div>
+              <div className="flex flex-col gap-2 w-40">
+                <button
+                  onClick={() => setScheduleOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-accent text-accent-foreground font-mono text-[10px] uppercase tracking-widest border-2 border-accent"
+                >
+                  <Phone className="h-3 w-3" />
+                  Schedule a call
+                </button>
+                <button
+                  onClick={() => openExternal("https://drive.google.com")}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-transparent text-foreground font-mono text-[10px] uppercase tracking-widest border-2 border-border"
+                >
+                  <FileText className="h-3 w-3" />
+                  Resume
+                </button>
+                <div className="flex gap-2">
+                  {socials.map(({ icon: Icon, label, href }) => (
+                    <button
+                      key={label}
+                      onClick={() => openExternal(href)}
+                      title={label}
+                      className="flex-1 flex items-center justify-center py-2 border-2 border-border text-muted-foreground"
                     >
-                     <span className=" text-zinc-300 sm:ml-2 mr-2 hover:text-zinc-50 hover:decoration-sky-500 "> View All Projects </span>
-                      <span className="ml-2 transform transition-transform duration-300 group-hover:translate-x-1">
-                        →
-                      </span>
-                      <span className="block border-b-2 border-primary scale-x-0 group-hover:scale-x-100 transform transition-transform duration-300 origin-left"></span>
-                    </a>
-                  </div>
-                </section>
-
-                {/* Experience */}
-                <section id="experience" className="space-y-6 mt-6">
-                  <h2 className="text-3xl  font-bold">Experience</h2>
-                  <div className="space-y-6">
-                    {experiences.map((exp) => (
-                      <ExperienceCard key={exp.company} {...exp} />
-                    ))}
-                  </div>
-                </section>
-
-                <section id="achievements" className="space-y-6 mt-6">
-                  <h2 className="text-3xl font-bold">Achievements</h2>
-                  <div className="border border-border rounded-lg p-4 sm:p-6 bg-card">
-                    <ul className="space-y-3 text-sm sm:text-base text-foreground">
-                      {achievements.map((achievement) => (
-                        <li key={achievement} className="flex gap-2">
-                          <span className="text-muted-foreground">•</span>
-                          <span>{achievement}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </section>
-              </Tabs>
-
-              {/* Hire Me */}
-              <section id="hire-me" className="space-y-6">
-                <HireMe />
-              </section>
-            </main>
+                      <Icon className="h-3.5 w-3.5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* ── Two-column body ── */}
+        <div className="flex flex-col lg:flex-row gap-6">
+
+          {/* ── Left sidebar — tech stack ── */}
+          <aside className="lg:w-56 shrink-0 lg:sticky lg:top-[60px] lg:self-start">
+            <div className="border-2 border-border">
+              <div className="border-b-2 border-border px-3 py-2 bg-muted">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">tech_stack.json</span>
+              </div>
+              <div className="p-4 space-y-4">
+                <TechStack category="Languages" technologies="JavaScript, TypeScript, Java, Python, PostgreSQL, C" />
+                <TechStack category="Frameworks" technologies="Next.js, React.js, Node.js, Express, Redux" />
+                <TechStack category="Data & ML" technologies="NumPy, Pandas, Scikit-learn" />
+                <TechStack category="DevOps" technologies="Docker, Kafka, Kong, Vault, Redis" />
+                <TechStack category="Cloud" technologies="AWS EC2, AWS S3, Firebase, Prometheus, Grafana" />
+              </div>
+            </div>
+          </aside>
+
+          {/* ── Main content ── */}
+          <main className="flex-1 min-w-0">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+
+              {/* Projects */}
+              <section id="projects" className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
+                    // projects
+                  </h2>
+                  <div className="flex-1 border-t border-border" />
+                  <span className="font-mono text-[10px] text-muted-foreground">{projects.length} items</span>
+                </div>
+                <div className="space-y-3">
+                  {projects.map((project) => (
+                    <ProjectCard key={project.title} {...project} />
+                  ))}
+                </div>
+                <div className="mt-3">
+                  <a href="#" className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    → view all projects
+                  </a>
+                </div>
+              </section>
+
+              {/* Experience */}
+              <section id="experience" className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
+                    // experience
+                  </h2>
+                  <div className="flex-1 border-t border-border" />
+                </div>
+                <div className="space-y-3">
+                  {experiences.map((exp) => (
+                    <ExperienceCard key={exp.company} {...exp} />
+                  ))}
+                </div>
+              </section>
+
+              {/* Achievements */}
+              <section id="achievements" className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
+                    // achievements
+                  </h2>
+                  <div className="flex-1 border-t border-border" />
+                </div>
+                <div className="border-2 border-border bg-card">
+                  {achievements.map((achievement, idx) => (
+                    <div
+                      key={idx}
+                      className="flex gap-3 px-4 py-3 border-b last:border-b-0 border-border text-xs leading-relaxed"
+                    >
+                      <span className="font-mono text-accent shrink-0 mt-0.5">
+                        {String(idx + 1).padStart(2, "0")}.
+                      </span>
+                      <span className="text-foreground/90">{achievement}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </Tabs>
+
+            {/* Hire me */}
+            <HireMe />
+          </main>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-10 border-t-2 border-border pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
+            © {new Date().getFullYear()} Saswat Barai
+          </span>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            Built with Next.js · Deployed on Vercel
+          </span>
+        </footer>
       </div>
+
       <ScheduleCallModal open={scheduleOpen} onClose={() => setScheduleOpen(false)} />
     </div>
   );
-};
-
-export default Index;
+}

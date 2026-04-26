@@ -1,53 +1,70 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 export const HireMe = () => {
   const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Hook this with backend / email API
     console.log("Email submitted:", email);
+    setSent(true);
     setEmail("");
+    setTimeout(() => setSent(false), 4000);
   };
 
   return (
-    <section id="hire-me" className="py-16">
-      <Card className="max-w-2xl mx-auto p-8 text-center border border-border bg-card shadow-md">
-        {/* Heading */}
-        <h2 className="text-3xl font-bold text-foreground mb-3">
-          Want to hire me as a freelancer?
-        </h2>
-        <p className="text-muted-foreground mb-8 text-sm sm:text-base leading-relaxed">
-          Drop your email ID below and I&apos;ll get back to you as soon as possible.  
-          Let&apos;s discuss how we can turn your ideas into reality 🚀
-        </p>
+    <section id="hire-me" className="py-10">
+      {/* Terminal-style hire-me block */}
+      <div className="border-2 border-border bg-card">
+        {/* Terminal titlebar */}
+        <div className="flex items-center gap-2 px-4 py-2 border-b-2 border-border bg-muted">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">hire_me.sh</span>
+          <span className="ml-auto font-mono text-[10px] text-accent">● running</span>
+        </div>
 
-        {/* Email form */}
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col sm:flex-row items-center gap-3"
-        >
-          <Input
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="flex-1 px-4 py-2"
-          />
-          <Button
-            type="submit"
-            className="px-6 py-2 w-full sm:w-auto"
-          >
-            Send
-          </Button>
-        </form>
-      </Card>
+        <div className="p-5 sm:p-8">
+          {/* Output lines */}
+          <div className="font-mono text-xs text-muted-foreground space-y-1 mb-6">
+            <p><span className="text-accent">$</span> status --available</p>
+            <p className="pl-4">→ open to freelance &amp; contract work</p>
+            <p className="pl-4">→ backend systems, APIs, microservices</p>
+            <p className="pl-4">→ response time: &lt; 24h</p>
+          </div>
+
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-2">
+            Want to hire me as a freelancer?
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            Drop your email below and I&apos;ll get back to you as soon as possible.
+            Let&apos;s discuss how we can turn your ideas into reality.
+          </p>
+
+          {sent ? (
+            <div className="border border-accent bg-accent/10 px-4 py-3 font-mono text-xs text-accent">
+              → Message queued. Will respond within 24h.
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-0">
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="flex-1 bg-background border-2 border-border px-4 py-2.5 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground transition-colors sm:border-r-0"
+              />
+              <button
+                type="submit"
+                className="px-6 py-2.5 bg-foreground text-background font-mono text-xs uppercase tracking-widest hover:bg-foreground/90 transition-colors border-2 border-foreground"
+              >
+                Send →
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
     </section>
   );
 };
