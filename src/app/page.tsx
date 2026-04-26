@@ -16,6 +16,7 @@ import { ExperienceCard } from "@/components/ExperienceHome";
 import { HireMe } from "@/components/HireMe"; // ✅ Separate HireMe component
 import { redirect, RedirectType } from "next/navigation";
 import Preloader from "@/components/Preloader";
+import ScheduleCallModal from "@/components/ScheduleCallModal";
 
 const projects = [
   {
@@ -86,6 +87,7 @@ const achievements = [
 const Index = () => {
   const [activeTab, setActiveTab] = useState("projects");
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   const filteredProjects = projects;
 
@@ -125,7 +127,10 @@ const Index = () => {
                 </p>
 
                 <div className="flex gap-2 mb-8">
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Button
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={() => setScheduleOpen(true)}
+                  >
                     Schedule a call
                   </Button>
                   <Button variant="outline">Resume</Button>
@@ -220,6 +225,7 @@ const Index = () => {
           </div>
         </div>
       </div>
+      <ScheduleCallModal open={scheduleOpen} onClose={() => setScheduleOpen(false)} />
     </div>
   );
 };
