@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react";
+import Link from "next/link";
 import project1 from "@/assets/crypto-wallet-interface.jpg";
 import project2 from "@/assets/project2-fsP8Ek-i.jpg";
 import project3 from "@/assets/social-media-app-interface.png";
@@ -86,8 +87,8 @@ function HomeProject() {
 
       {/* View Full Archive Link */}
       <div className="text-right mt-4">
-        <a
-          href="#"
+        <Link
+          href="/projects"
           className="inline-flex items-center text-primary font-semibold group transition-all duration-300"
         >
           View Full Project Archive
@@ -95,7 +96,7 @@ function HomeProject() {
             →
           </span>
           <span className="block border-b-2 border-primary scale-x-0 group-hover:scale-x-100 transform transition-transform duration-300 origin-left"></span>
-        </a>
+        </Link>
       </div>
     </div>
   );

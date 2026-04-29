@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { Tabs } from "@/components/ui/tabs";
 import { ProjectCard } from "@/components/ProjectCard";
 import { TechStack } from "@/components/TechStack";
 import { Github, Twitter, Linkedin, FileText, Phone } from "lucide-react";
 import Image from "next/image";
-import project1 from "@/assets/crypto-wallet-interface.jpg";
-import project3 from "@/assets/social-media-app-interface.png";
+import { projects } from "@/lib/projects";
 import Navbar from "@/components/Navbar";
 import { ExperienceCard } from "@/components/ExperienceHome";
 import { HireMe } from "@/components/HireMe";
@@ -14,27 +14,6 @@ import Preloader from "@/components/Preloader";
 import ScheduleCallModal from "@/components/ScheduleCallModal";
 import { FadeIn } from "@/components/FadeIn";
 import { motion } from "framer-motion";
-
-const projects = [
-  {
-    title: "LMS Microservices Platform",
-    date: "Oct 2025–Present",
-    description:
-      "Architected a scalable LMS using Node.js and TypeScript microservices, securing 10+ API endpoints via Kong API Gateway and HashiCorp Vault to support 1,000+ concurrent users.",
-    tags: ["Node.js", "TypeScript", "Kafka", "Redis", "Kong", "Vault"],
-    image: project1,
-    links: { github: "#" },
-  },
-  {
-    title: "Hiky — Real-time Messaging",
-    date: "May–Sept 2024",
-    description:
-      "Built a real-time messaging platform with React.js and Node.js, achieving sub-100ms latency using WebSockets and Redis Pub/Sub for scalable cross-instance communication.",
-    tags: ["React.js", "Node.js", "WebSockets", "Redis", "JWT/PASETO"],
-    image: project3,
-    links: { github: "#" },
-  },
-];
 
 const experiences = [
   {
@@ -66,6 +45,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState("projects");
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const openExternal = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
+  const featuredProjects = projects.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
@@ -237,24 +217,30 @@ export default function Index() {
                 <FadeIn>
                   <div className="flex items-center gap-3 mb-4">
                     <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
-                      // projects
+                      {"// projects"}
                     </h2>
                     <div className="flex-1 border-t border-border" />
-                    <span className="font-mono text-[10px] text-muted-foreground">{projects.length} items</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">{featuredProjects.length} featured</span>
                   </div>
                 </FadeIn>
                 <div className="space-y-3">
-                  {projects.map((project, i) => (
+                  {featuredProjects.map((project, i) => (
                     <FadeIn key={project.title} delay={i * 0.06}>
-                      <ProjectCard {...project} />
+                      <ProjectCard {...project} index={i} />
                     </FadeIn>
                   ))}
                 </div>
-                <FadeIn delay={projects.length * 0.06}>
-                  <div className="mt-3">
-                    <a href="#" className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors">
-                      → view all projects
-                    </a>
+                <FadeIn delay={featuredProjects.length * 0.06}>
+                  <div className="mt-4">
+                    <Link
+                      href="/projects"
+                      className="group flex items-center justify-between border-2 border-border bg-muted px-4 py-3 font-mono text-xs uppercase tracking-widest text-muted-foreground transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/50 hover:text-foreground"
+                    >
+                      <span>view all projects</span>
+                      <span className="text-accent transition-transform duration-300 group-hover:translate-x-1">
+                        →
+                      </span>
+                    </Link>
                   </div>
                 </FadeIn>
               </section>
@@ -264,7 +250,7 @@ export default function Index() {
                 <FadeIn>
                   <div className="flex items-center gap-3 mb-4">
                     <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
-                      // experience
+                      {"// experience"}
                     </h2>
                     <div className="flex-1 border-t border-border" />
                   </div>
@@ -283,7 +269,7 @@ export default function Index() {
                 <FadeIn>
                   <div className="flex items-center gap-3 mb-4">
                     <h2 className="font-mono text-xs uppercase tracking-widest text-accent">
-                      // achievements
+                      {"// achievements"}
                     </h2>
                     <div className="flex-1 border-t border-border" />
                   </div>

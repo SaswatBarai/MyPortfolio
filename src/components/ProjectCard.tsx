@@ -1,9 +1,11 @@
 "use client";
+
 import { motion } from "framer-motion";
-import { Github, Globe, ExternalLink } from "lucide-react";
+import { ArrowUpRight, ExternalLink, Github, Globe } from "lucide-react";
 import Image, { StaticImageData } from "next/image";
 
 interface ProjectCardProps {
+  index?: number;
   title: string;
   date: string;
   description: string;
@@ -18,73 +20,115 @@ interface ProjectCardProps {
   };
 }
 
-export const ProjectCard = ({ title, date, description, tags, image, links }: ProjectCardProps) => {
+export const ProjectCard = ({
+  index = 0,
+  title,
+  date,
+  description,
+  tags,
+  image,
+  links,
+}: ProjectCardProps) => {
+  const visibleTags = tags.slice(0, 5);
+  const hiddenTagCount = Math.max(tags.length - visibleTags.length, 0);
+
   return (
     <motion.div
-      className="group border-2 border-border bg-card hover:border-foreground/40 transition-colors duration-200"
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      className="group relative overflow-hidden border-2 border-border bg-card transition-all duration-700 hover:-translate-y-0.5 hover:border-foreground/45 hover:shadow-[3px_3px_0_0_var(--accent)]"
+      whileHover={{ y: -1 }}
+      transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      <div className="flex flex-row items-start gap-0">
-        {/* Image — retro thumbnail style */}
-        <div className="flex-shrink-0 border-r-2 border-border">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-accent/50 opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
+
+      <div className="grid gap-0 sm:grid-cols-[180px_1fr]">
+        <div className="relative min-h-[150px] overflow-hidden border-b-2 border-border bg-muted sm:min-h-full sm:border-b-0 sm:border-r-2">
           <Image
             src={image}
             alt={title}
-            className="w-20 h-20 sm:w-24 sm:h-24 object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
-            width={96}
-            height={96}
+            fill
+            sizes="(min-width: 640px) 180px, 100vw"
+            className="object-cover grayscale contrast-110 transition-all duration-1000 group-hover:scale-[1.015] group-hover:grayscale-0"
             placeholder="empty"
           />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-accent/10 to-transparent opacity-0 group-hover:opacity-100 project-scan" />
+          <span className="absolute left-3 top-3 border border-border bg-background/90 px-2 py-1 font-mono text-[10px] text-muted-foreground backdrop-blur">
+            {String(index + 1).padStart(2, "0")}
+          </span>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0 p-3 sm:p-4">
-          <div className="flex justify-between items-start mb-1 gap-2">
-            <h3 className="text-sm sm:text-base font-bold text-foreground leading-tight">
-              {title}
-            </h3>
-            <span className="font-mono text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
+        <div className="flex min-w-0 flex-col p-4 sm:p-5">
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-accent">
+                selected build
+              </p>
+              <h3 className="text-lg font-bold leading-tight text-foreground sm:text-xl">
+                {title}
+              </h3>
+            </div>
+            <span className="w-fit shrink-0 border border-border bg-muted px-2 py-1 font-mono text-[10px] text-muted-foreground">
               {date}
             </span>
           </div>
 
-          <p className="font-mono text-[11px] sm:text-xs text-muted-foreground mb-3 leading-relaxed line-clamp-2">
+          <p className="font-mono text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
             {description}
           </p>
 
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {tags.map((tag) => (
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {visibleTags.map((tag) => (
               <span
                 key={tag}
-                className="font-mono text-[10px] px-1.5 py-0.5 border border-border text-muted-foreground bg-muted whitespace-nowrap"
+                className="border border-border bg-muted px-2 py-1 font-mono text-[10px] text-muted-foreground transition-colors duration-500 hover:border-accent/70 hover:text-foreground"
               >
                 {tag}
               </span>
             ))}
+            {hiddenTagCount > 0 && (
+              <span className="border border-border px-2 py-1 font-mono text-[10px] text-muted-foreground">
+                +{hiddenTagCount}
+              </span>
+            )}
           </div>
 
-          {/* Links */}
           {links && (
-            <div className="flex gap-3">
-              {links.github && (
-                <a href={links.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors">
-                  <Github className="h-3 w-3" />
-                  <span>src</span>
-                </a>
-              )}
-              {links.website && (
-                <a href={links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors">
-                  <ExternalLink className="h-3 w-3" />
-                  <span>live</span>
-                </a>
-              )}
-              {links.linkedin && (
-                <a href={links.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground hover:text-foreground transition-colors">
-                  <Globe className="h-3 w-3" />
-                  <span>more</span>
-                </a>
-              )}
+            <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+              <div className="flex gap-3">
+                {links.github && (
+                  <a
+                    href={links.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Github className="h-3.5 w-3.5" />
+                    <span>src</span>
+                  </a>
+                )}
+                {links.website && (
+                  <a
+                    href={links.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>live</span>
+                  </a>
+                )}
+                {links.linkedin && (
+                  <a
+                    href={links.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Globe className="h-3.5 w-3.5" />
+                    <span>more</span>
+                  </a>
+                )}
+              </div>
+              <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-colors duration-700 group-hover:text-accent" />
             </div>
           )}
         </div>
