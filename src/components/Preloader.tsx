@@ -124,7 +124,7 @@ export default function Preloader() {
                       <span
                         key={i}
                         className={`font-mono text-[11px] leading-5 transition-colors ${
-                          i < visibleLines ? "text-muted-foreground/60" : "text-transparent"
+                          i < visibleLines ? "text-muted-foreground" : "text-transparent"
                         } ${i === visibleLines - 1 ? "text-accent" : ""}`}
                       >
                         {String(i + 1).padStart(2, "0")}
@@ -187,7 +187,7 @@ export default function Preloader() {
 
             {/* Below editor */}
             <div className="mt-3 hidden sm:flex items-center justify-between font-mono text-[10px] text-muted-foreground px-1">
-              <span>// saswat barai · portfolio v3</span>
+              <span>{"// saswat barai · portfolio v3"}</span>
               <motion.span
                 animate={{ opacity: [0.4, 1, 0.4] }}
                 transition={{ duration: 1.4, repeat: Infinity }}

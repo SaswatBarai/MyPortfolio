@@ -6,7 +6,7 @@ const COOKIE_NAME = "admin_token";
 
 function getSecret() {
   const secret = process.env.JWT_SECRET;
-  if (!secret) return new TextEncoder().encode("fallback-secret-change-me");
+  if (!secret) throw new Error("JWT_SECRET environment variable is not set");
   return new TextEncoder().encode(secret);
 }
 
@@ -25,10 +25,16 @@ export async function middleware(request: NextRequest) {
   const isProtectedPage =
     pathname.startsWith("/dashboard") && !pathname.startsWith("/dashboard/login");
 
+  // GET /api/schedule/slots is public (used by the booking widget to show availability);
+  // only the admin-only mutations (add/delete slots) need auth.
+  const isProtectedSlotsMutation =
+    pathname.startsWith("/api/schedule/slots") && request.method !== "GET";
+
   const isProtectedApi =
     pathname.startsWith("/api/schedule/requests") ||
     pathname.startsWith("/api/schedule/approve") ||
-    pathname.startsWith("/api/schedule/reject");
+    pathname.startsWith("/api/schedule/reject") ||
+    isProtectedSlotsMutation;
 
   if (!isProtectedPage && !isProtectedApi) {
     return NextResponse.next();
@@ -53,5 +59,6 @@ export const config = {
     "/api/schedule/requests",
     "/api/schedule/approve/:path*",
     "/api/schedule/reject/:path*",
+    "/api/schedule/slots",
   ],
 };

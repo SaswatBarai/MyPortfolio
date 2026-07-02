@@ -381,7 +381,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
                         <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
                           pick start · window {fmt12(selectedSlot.startTime)}–{fmt12(selectedSlot.endTime)}
                           {toMinutes(selectedSlot.endTime) <= toMinutes(selectedSlot.startTime) && (
-                            <span className="ml-1 text-muted-foreground/60">(next day)</span>
+                            <span className="ml-1 text-muted-foreground">(next day)</span>
                           )}
                         </p>
                         <span className="font-mono text-[9px] text-accent border border-accent/30 px-1.5 py-0.5 shrink-0">
@@ -392,7 +392,7 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
                       {/* Already-scheduled meetings */}
                       {bookedRanges.length > 0 && (
                         <div className="flex flex-col gap-1.5">
-                          <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
+                          <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
                             already scheduled
                           </p>
                           <div className="flex flex-col gap-1">
@@ -464,8 +464,9 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
               )}
 
               <div className="flex flex-col gap-1">
-                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">name</label>
+                <label htmlFor="schedule-name" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">name</label>
                 <input
+                  id="schedule-name"
                   placeholder="Jane Doe"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -474,8 +475,9 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">email</label>
+                <label htmlFor="schedule-email" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">email</label>
                 <input
+                  id="schedule-email"
                   type="email"
                   placeholder="jane@example.com"
                   value={form.email}
@@ -485,11 +487,12 @@ export default function ScheduleCallModal({ open, onClose }: Props) {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <label htmlFor="schedule-message" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                   what to discuss?{" "}
-                  <span className="normal-case text-muted-foreground/50">(optional)</span>
+                  <span className="normal-case text-muted-foreground">(optional)</span>
                 </label>
                 <textarea
+                  id="schedule-message"
                   placeholder="Brief description..."
                   rows={3}
                   value={form.message}

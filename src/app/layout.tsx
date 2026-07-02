@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-sans",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     "Microservices",
     "Software Engineer",
   ],
-  authors: [{ name: "Saswat Barai", url: "https://saswat.dev" }],
+  authors: [{ name: "Saswat Barai", url: "https://saswat.app" }],
   creator: "Saswat Barai",
   icons: {
     icon: [
@@ -47,27 +48,18 @@ export const metadata: Metadata = {
     title: "Saswat Barai — Backend Engineer",
     description:
       "Backend-focused software engineer building scalable APIs, microservices, and real-time systems.",
-    url: "https://saswat-barai.me",
+    url: "https://saswat.app",
     siteName: "Saswat's Portfolio",
     locale: "en_US",
     type: "website",
-    images: [
-      {
-        url: "/profile.jpg",
-        width: 1200,
-        height: 1200,
-        alt: "Saswat Barai",
-      },
-    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Saswat Barai — Backend Engineer",
     description: "Portfolio of Saswat Barai.",
     creator: "@saswat_ig",
-    images: ["/profile.jpg"],
   },
-  metadataBase: new URL("https://saswat.dev"),
+  metadataBase: new URL("https://saswat.app"),
   alternates: { canonical: "/" },
 };
 
@@ -83,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

@@ -47,8 +47,23 @@ export default function Index() {
   const openExternal = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
   const featuredProjects = projects.slice(0, 3);
 
+  const personJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Saswat Barai",
+    jobTitle: "Backend Engineer",
+    url: "https://saswat.app",
+    image: "https://saswat.app/profile.jpg",
+    alumniOf: "SOA University (ITER)",
+    sameAs: socials.map((s) => s.href),
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+      />
       <Preloader />
       <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -91,6 +106,8 @@ export default function Index() {
                   alt="Saswat Barai"
                   width={150}
                   height={160}
+                  sizes="150px"
+                  quality={65}
                   className="h-[160px] w-[150px] object-cover object-[center_10%] scale-125"
                   priority
                 />
@@ -107,7 +124,7 @@ export default function Index() {
                   Schedule Call
                 </motion.button>
                 <motion.button
-                  onClick={() => openExternal("https://drive.google.com")}
+                  onClick={() => openExternal("/resume.pdf")}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.15 }}
@@ -142,6 +159,8 @@ export default function Index() {
                   alt="Saswat Barai"
                   width={220}
                   height={260}
+                  sizes="220px"
+                  quality={65}
                   className="h-[260px] w-[220px] object-cover object-[center_10%]"
                   priority
                 />
@@ -158,7 +177,7 @@ export default function Index() {
                   Schedule a call
                 </motion.button>
                 <motion.button
-                  onClick={() => openExternal("https://drive.google.com")}
+                  onClick={() => openExternal("/resume.pdf")}
                   whileHover={{ y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   transition={{ duration: 0.15 }}

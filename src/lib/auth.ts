@@ -4,7 +4,8 @@ import { jwtVerify } from "jose/jwt/verify";
 const COOKIE_NAME = "admin_token";
 
 function getSecret() {
-  const secret = process.env.JWT_SECRET ?? "fallback-secret-change-me";
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET environment variable is not set");
   return new TextEncoder().encode(secret);
 }
 

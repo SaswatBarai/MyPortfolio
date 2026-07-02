@@ -47,15 +47,16 @@ export default function DashboardLogin() {
           <div className="p-6">
             <div className="font-mono text-xs text-muted-foreground space-y-1 mb-6">
               <p><span className="text-accent">$</span> auth --admin</p>
-              <p className="pl-4 text-muted-foreground/60">→ saswat portfolio dashboard</p>
+              <p className="pl-4 text-muted-foreground">→ saswat portfolio dashboard</p>
             </div>
 
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
-                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <label htmlFor="login-email" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                   email
                 </label>
                 <input
+                  id="login-email"
                   type="email"
                   placeholder="you@email.com"
                   value={email}
@@ -67,10 +68,11 @@ export default function DashboardLogin() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <label htmlFor="login-password" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                   password
                 </label>
                 <input
+                  id="login-password"
                   type="password"
                   placeholder="••••••••"
                   value={password}

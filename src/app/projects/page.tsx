@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ArrowLeft, Calendar, Code2, ExternalLink, Github, Layers } from "lucide-react";
 import { FadeIn } from "@/components/FadeIn";
 import { projects } from "@/lib/projects";
+import { slugify } from "@/lib/utils";
 
 export const metadata = {
   title: "Projects",
@@ -111,9 +112,11 @@ export default function ProjectsPage() {
                     </div>
 
                     <div className="py-4 sm:py-5">
-                      <h2 className="text-2xl sm:text-3xl font-bold leading-tight text-foreground">
-                        {featuredProject.title}
-                      </h2>
+                      <Link href={`/projects/${slugify(featuredProject.title)}`}>
+                        <h2 className="text-2xl sm:text-3xl font-bold leading-tight text-foreground hover:text-accent transition-colors">
+                          {featuredProject.title}
+                        </h2>
+                      </Link>
                       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                         {featuredProject.description}
                       </p>
@@ -132,6 +135,12 @@ export default function ProjectsPage() {
                       </div>
 
                       <div className="flex gap-2 border-t border-border pt-4">
+                        <Link
+                          href={`/projects/${slugify(featuredProject.title)}`}
+                          className="inline-flex items-center gap-2 border border-accent bg-accent/10 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent hover:text-accent-foreground"
+                        >
+                          case study
+                        </Link>
                         {featuredProject.links?.github && (
                           <a
                             href={featuredProject.links.github}
@@ -160,6 +169,7 @@ export default function ProjectsPage() {
             <section className="grid gap-3 md:grid-cols-2">
               {archiveProjects.map((project, index) => (
                 <FadeIn key={project.title} delay={0.14 + index * 0.06}>
+                  <Link href={`/projects/${slugify(project.title)}`} className="block h-full">
                   <article className="group h-full border-2 border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-foreground/50 hover:shadow-[5px_5px_0_0_var(--accent)]">
                     <div className="relative aspect-[16/9] border-b-2 border-border overflow-hidden">
                       <Image
@@ -200,6 +210,7 @@ export default function ProjectsPage() {
                       </div>
                     </div>
                   </article>
+                  </Link>
                 </FadeIn>
               ))}
             </section>

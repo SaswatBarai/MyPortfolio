@@ -62,7 +62,7 @@
 
   /* Muted — subtle backgrounds and text */
   --muted:             oklch(0.18 0.000 0);
-  --muted-foreground:  oklch(0.55 0.000 0);
+  --muted-foreground:  oklch(0.62 0.000 0); /* bumped for WCAG AA contrast (4.5:1) on --background */
 
   /* ACCENT = yellow ⚡ */
   --accent:            oklch(0.90 0.20 100);   /* bright #FFE500-ish yellow */
@@ -98,7 +98,7 @@
   --secondary:         oklch(0.18 0.000 0);
   --secondary-foreground:oklch(0.97 0.000 0);
   --muted:             oklch(0.18 0.000 0);
-  --muted-foreground:  oklch(0.55 0.000 0);
+  --muted-foreground:  oklch(0.62 0.000 0); /* bumped for WCAG AA contrast (4.5:1) on --background */
   --accent:            oklch(0.90 0.20 100);
   --accent-foreground: oklch(0.10 0.000 0);
   --destructive:       oklch(0.62 0.24 25);

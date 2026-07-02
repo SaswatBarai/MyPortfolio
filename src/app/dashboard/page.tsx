@@ -460,8 +460,9 @@ export default function DashboardPage() {
               {slotMode === "manual" && (
                 <form onSubmit={handleAddSlot} className="p-4 flex flex-col gap-4">
                   <div className="flex flex-col gap-1">
-                    <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">date</label>
+                    <label htmlFor="slot-date" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">date</label>
                     <input
+                      id="slot-date"
                       type="date"
                       value={newSlot.date}
                       onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
@@ -472,8 +473,9 @@ export default function DashboardPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1">
-                      <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">start</label>
+                      <label htmlFor="slot-start" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">start</label>
                       <input
+                        id="slot-start"
                         type="time"
                         value={newSlot.startTime}
                         onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
@@ -482,8 +484,9 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">end</label>
+                      <label htmlFor="slot-end" className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">end</label>
                       <input
+                        id="slot-end"
                         type="time"
                         value={newSlot.endTime}
                         onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
@@ -554,7 +557,7 @@ export default function DashboardPage() {
                           </button>
 
                           {/* Status label */}
-                          <span className={`font-mono text-[9px] uppercase tracking-widest w-12 shrink-0 ${cfg.free ? "text-accent" : "text-muted-foreground/50"}`}>
+                          <span className={`font-mono text-[9px] uppercase tracking-widest w-12 shrink-0 ${cfg.free ? "text-accent" : "text-muted-foreground"}`}>
                             {cfg.free ? "free" : "no free"}
                           </span>
 

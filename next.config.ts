@@ -6,7 +6,10 @@ const nextConfig: NextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true,
-  }
+  },
+  images: {
+    qualities: [65, 75],
+  },
 };
 
 export default nextConfig;
